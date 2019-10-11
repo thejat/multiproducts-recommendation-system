@@ -1,0 +1,15 @@
+#Custom File/Folder Ignore
+
+cache/
+results/
+tmp/
+tmp*
+*.png
+*.jpeg
+*.csv
+*.pb
+*.pkl
+*/__pycache__
+
+.DS_Store
+.idea/
