@@ -2,7 +2,7 @@
 
 cache/
 results/
-tmp/
+tmp/*.*
 tmp*
 *.png
 *.jpeg
