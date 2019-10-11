@@ -195,6 +195,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     heuristic_list = meta['heuristic_list']
     time_limit = meta['time_multiplier'] * num_prods
     is_debug = meta['print_debug']
+    MQLib_dir = meta['MQLib_dir']
     p_arr = rcm['p']
     v_arr = rcm['v']
     vij_arr = rcm['v2']
@@ -214,7 +215,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     mutex = Lock()
     for i in range(len(heuristic_list)):
         worker = Thread(target=compare_qip_run_c_subroutine,
-                        args=(input_filename, heuristic_list[i], time_limit, output_filename, results, mutex))
+                        args=(input_filename, MQLib_dir, heuristic_list[i], time_limit, output_filename, results, mutex))
         threadlist.append(worker)
         worker.start()
     for t in threadlist:
@@ -228,10 +229,10 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     return maxRev, maxSet, time_taken
 
 
-def compare_qip_run_c_subroutine(input_filename, heuristic, time_limit, output_filename, results, mutex):
+def compare_qip_run_c_subroutine(input_filename, MQLib_dir, heuristic, time_limit, output_filename, results, mutex):
     output_dir = '/'.join(output_filename.split("/")[:-1])
     output_file = output_filename.split("/")[-1]
-    run_command = f'./MQLib/bin/MQLib -fQ {input_filename} -h {heuristic} -r {time_limit} -ps > {output_dir}/{heuristic}_{output_file}'
+    run_command = f'{MQLib_dir}/bin/MQLib -fQ {input_filename} -h {heuristic} -r {time_limit} -ps > {output_dir}/{heuristic}_{output_file}'
     os.system(run_command)
     try:
         with open(f'{output_dir}/{heuristic}_{output_file}') as f:
