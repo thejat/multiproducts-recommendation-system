@@ -34,7 +34,6 @@ def generate_instance(price_range, prod, genMethod=None, iterNum=None):
 
     # v is a prod+1 length vector as the first element signifies the customer preference for the no purchase option
     v = np.random.beta(1, 5, prod + 1) + 1e-3
-
     # Ensure that there are no duplicate entires in v - required for Static-MNL.
     u, indices = np.unique(v, return_inverse=True)
 

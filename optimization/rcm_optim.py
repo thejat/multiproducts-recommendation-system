@@ -61,6 +61,7 @@ def init_comparision_methods():
         'qip-exact': binSearchCompare_qip_exact,
         'qip-approx': binSearchCompare_qip_approx,
         'qip-approx-mthread': binSearchCompare_qip_approx_multithread,
+        # 'qip-approx-mthread-constrainted':binSearchCompare_qip_approx_constrained_multithread,
         'ip-exact': binSearchCompare_ip_exact
     }
 
@@ -97,6 +98,9 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, U)
         meta['selected_products'] = selected_products
         meta['removed_products'] = removed_products
+        if(len(selected_products+removed_products)>=num_prods):
+            maxSet = selected_products
+            break
         maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
         # print('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
         # Add Selected products in mix
@@ -367,6 +371,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
 
     return maxRev, maxSet, time_taken
+
 
 
 def compare_qip_run_c_subroutine(input_filename, MQLib_dir, heuristic, time_limit, output_filename, results, mutex):
@@ -906,8 +911,8 @@ def rcm_mixed_ip(num_prods, C, rcm, meta=None):
     meta['url'] = "https://api-oaas.docloud.ibmcloud.com/job_manager/rest/v1/"
     meta['key'] = "api_4e360631-3fd5-449b-b7a2-3449aca36a3b"
 
-    opt_model.solve(url=meta["url"], key=meta["key"])
-    # opt_model.solve()
+    # opt_model.solve(url=meta["url"], key=meta["key"])
+    opt_model.solve()
     time_taken = opt_model.solution._solve_details._time
     # get Optimal Set and Optimal Revenue
     x_solution = {(i, j): x_vars[i, j].solution_value for i in range(1, num_prods + 1) for j in range(i, num_prods + 1)}

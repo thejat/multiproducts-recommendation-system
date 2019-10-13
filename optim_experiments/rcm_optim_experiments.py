@@ -8,6 +8,7 @@ from threading import Thread, Lock
 import time
 from queue import Queue
 from optimization.rcm_optim import compare_nn_preprocess
+import traceback
 
 
 def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_list, prod_count_list, repeat_count,
@@ -56,10 +57,11 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                         print(f"Algorithm Details")
                         print(optim_algo_dict)
                         print(f"Exception Details:{str(e)}\n\n")
+                        traceback.print_exc()
     return experiment_summary
 
 
-def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='tmp/rcm_models/v2/'):
+def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='tmp/rcm_models/v2/', prob_v0=None):
     # Check If Dump Dir Exists
     if not os.path.exists(dump_dir):
         os.makedirs(dump_dir)
@@ -69,7 +71,7 @@ def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='t
             for i in range(repeat_count):
                 model_dict = {'price_range': price_range, 'num_prod': num_prod, 'repeat_id': i,
                               'time_of_creation': time_now}
-                rcm_model = generate_two_restricted_choice_model(price_range, num_prod)
+                rcm_model = generate_two_restricted_choice_model(price_range, num_prod,prob_v0=prob_v0)
                 model_dict.update({'rcm_model': rcm_model})
                 dump_filename = f'rcm_model_{price_range}_{num_prod}_{i}.pkl'
                 with open(f'{dump_dir}/{dump_filename}', 'wb') as f:

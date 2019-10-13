@@ -8,6 +8,14 @@ rcm_solution_dir = 'results/rcm_optim/%s_experiments/rcm_solutions'
 rcm_summary_dir = 'results/rcm_optim/%s_experiments'
 
 experiment_set_dict = {
+    # V0 Config Set for generating Improved Binary Set
+    'custom_v0_test': {
+        'price_range': [100],
+        'num_prods': [20],
+        'repeat_count': 1,
+        'prob_v0':0.4,
+        'algorithm_list': [MIXED_IP, BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCH_QIP_MTHREAD]
+    },
     # DevQA Config For Improved Binary Set
     'devqa_binary_search_improved': {
         'price_range': [100],

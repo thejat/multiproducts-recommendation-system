@@ -23,7 +23,11 @@ for experiment_id in experiment_id_list:
     price_range_list = experiment_set_dict[experiment_id]['price_range']
 
     if not os.path.exists(model_dir):
-        dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir)
+        if('prob_v0' in experiment_set_dict[experiment_id].keys()):
+            prob_v0 = experiment_set_dict[experiment_id]['prob_v0']
+            dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir,prob_v0=prob_v0)
+        else:
+            dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir)
 
     algorithm_list = experiment_set_dict[experiment_id]['algorithm_list']
     experiment_summary = run_rcm_experiments_v2(model_dir=model_dir,
