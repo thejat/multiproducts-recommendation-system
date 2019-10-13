@@ -391,7 +391,11 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
             maxRev, maxSet = results[heuristic]
     # Convert To Old Indexing if required
     if is_improved_qubo:
-        maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
+        try:
+            maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
+        except:
+            maxSet = 0
+            maxRev = 0
 
     return maxRev, maxSet, time_taken
 
