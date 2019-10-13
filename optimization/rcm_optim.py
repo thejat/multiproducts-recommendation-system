@@ -394,7 +394,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         try:
             maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
         except:
-            maxSet = 0
+            maxSet = []
             maxRev = 0
 
     return maxRev, maxSet, time_taken
