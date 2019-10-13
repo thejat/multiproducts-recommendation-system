@@ -8,6 +8,14 @@ rcm_solution_dir = 'results/rcm_optim/%s_experiments/rcm_solutions'
 rcm_summary_dir = 'results/rcm_optim/%s_experiments'
 
 experiment_set_dict = {
+    # Revenue ordered assortments test
+    'revenue_ordered_test': {
+        'price_range': [100],
+        'num_prods': [20,30,40,50],
+        'repeat_count': 1,
+        'prob_v0':None,
+        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCH_QIP_MTHREAD]
+    },
     # V0 Config Set for generating Improved Binary Set
     'custom_v0_test': {
         'price_range': [100],

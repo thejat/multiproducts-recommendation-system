@@ -78,3 +78,11 @@ ADXOPT2_SETS = {
     'solution_id': 'adxopt_sets',
     'algo': 'adxopt2'
 }
+
+"""
+Revenue Ordered Assortment, End When A(l)>A(l+1)
+"""
+REVENUE_ORDERED = {
+    'solution_id':'revenue_ordered',
+    'algo':'revenue-ordered'
+}

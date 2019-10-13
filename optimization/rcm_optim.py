@@ -30,6 +30,7 @@ def init_optim_algorithms():
         'mixed-ip': rcm_mixed_ip,
         'adxopt1': rcm_adxopt1_products,
         'adxopt2': rcm_adxopt2_sets,
+        'revenue-ordered': rcm_revenue_ordered,
         'brute-force': rcm_brute_force_search
     }
 
@@ -65,6 +66,28 @@ def init_comparision_methods():
         'ip-exact': binSearchCompare_ip_exact
     }
 
+
+# ====================RCM Revenue Ordered Assortments ====================================
+def rcm_revenue_ordered(num_prods, C, rcm, meta):
+    improved_lower_bound = 0
+    price_list = rcm['p'][1:]
+    start_time=time.time()
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
+    maxSet = None
+    for i in range(2, len(price_sorted_products)):
+        rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        if (rev_next_ro_set < rev_last_ro_set):
+            maxSet = price_sorted_products[:i]
+            break
+        rev_last_ro_set = rev_next_ro_set
+    maxRev = rev_last_ro_set
+    if maxSet is None:
+        maxSet = price_sorted_products
+    timeTaken = time.time()-start_time
+    if meta.get('print_results', False) is True:
+        print(meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)
+    return maxRev, maxSet, timeTaken
 
 # ====================RCM Improved Binary Search(with lemmas) Algorithm===================
 
