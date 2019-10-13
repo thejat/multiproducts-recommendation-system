@@ -25,6 +25,7 @@ E: Brute Search
 def init_optim_algorithms():
     global optim_methods_src
     optim_methods_src = {
+        'binary-search-improved': rcm_binary_search_v2,
         'binary-search': rcm_binary_search,
         'mixed-ip': rcm_mixed_ip,
         'adxopt1': rcm_adxopt1_products,
@@ -62,6 +63,96 @@ def init_comparision_methods():
         'qip-approx-mthread': binSearchCompare_qip_approx_multithread,
         'ip-exact': binSearchCompare_ip_exact
     }
+
+
+# ====================RCM Improved Binary Search(with lemmas) Algorithm===================
+
+def rcm_binary_search_v2(num_prods, C, rcm, meta):
+    '''
+            binary search using different comparison functions: get_nn_set_rcm or capAst_QPcompare_rcm
+        '''
+    # Not using K value at the moment. Binary search is irrelevant
+    init_comparision_methods()
+    global binSearch_comparision_src
+    comparison_function = binSearch_comparision_src[meta['comparison_function']]
+    p = rcm['p']
+
+    if meta.get('eps', None) is None:
+        meta['eps'] = 1e-3
+    if 'nn' in meta['comparison_function']:
+        print("Support Not Available for NN Function in imporved Binary Search...")
+        raise Exception
+
+    st = time.time()
+    count = 0
+    maxSet = None
+    meta['is_improved_qubo'] = 1
+    ##Heuristic to get optimal Value for L based on Lemma 3"
+    L = binSearchImproved_global_lower_bound(num_prods, C, rcm, meta)
+    U = 2 * max(p)  # U is the upper bound on the objective
+    while (U - L) > meta['eps']:
+        count += 1
+        K = (U + L) / 2
+        removed_products = binSearchImproved_removed_products(num_prods, C, rcm, meta, L)
+        selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, U)
+        meta['selected_products'] = selected_products
+        meta['removed_products'] = removed_products
+        maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
+        # print('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
+        # Add Selected products in mix
+        maxSet  = maxSet + meta['selected_products']
+        maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
+
+        if maxRev >= K:
+            L = K
+        else:
+            U = K
+
+    maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
+    timeTaken = time.time() - st
+    if meta.get('print_results', False) is True:
+        print(meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken, ' num iters:',
+              count)
+    return maxRev, maxSet, timeTaken
+
+
+def binSearchImproved_global_lower_bound(num_prods, C, rcm, meta):
+    improved_lower_bound = 0
+    price_list = rcm['p'][1:]
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
+    for i in range(2, len(price_sorted_products)):
+        rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        if (rev_next_ro_set < rev_last_ro_set):
+            improved_lower_bound = rcm['p'][price_sorted_products[i]]
+            break
+        rev_last_ro_set = rev_next_ro_set
+    return improved_lower_bound
+
+
+def binSearchImproved_removed_products(num_prods, C, rcm, meta, lower_limit):
+    price_list = rcm['p'][1:]
+    price_sorted_products_inc = (np.argsort(price_list) + 1)
+    removed_products = []
+    product_max_price = rcm['p'][price_sorted_products_inc[-1]]
+    for i in range(len(price_sorted_products_inc) - 1):
+        if ((rcm['p'][price_sorted_products_inc[i]] + product_max_price) < lower_limit):
+            removed_products.append(price_sorted_products_inc[i])
+        else:
+            break
+    return removed_products
+
+
+def binSearchImproved_selected_products(num_prods, C, rcm, meta, upper_limit):
+    price_list = rcm['p'][1:]
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    selected_products = []
+    for i in range(len(price_sorted_products)):
+        if (rcm['p'][price_sorted_products[i]]) > upper_limit:
+            selected_products.append(price_sorted_products[i])
+        else:
+            break
+    return selected_products
 
 
 # ====================RCM Binary Search Algorithm===================
@@ -199,13 +290,57 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     p_arr = rcm['p']
     v_arr = rcm['v']
     vij_arr = rcm['v2']
+    is_improved_qubo = False
+    if ('is_improved_qubo' in meta.keys()):
+        is_improved_qubo = True
+        old2new_index, new2old_index = {}, {}
 
-    # Setup Input File for approx step
-    with open(input_filename, 'w') as f:
-        f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
+    if not is_improved_qubo:
+        # Setup Input File for approx step
+        with open(input_filename, 'w') as f:
+            f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
+            for i in range(num_prods):
+                for j in range(i, num_prods):
+                    f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
+    else:
+        # SetupIndex transfer
+        selected_products = meta['selected_products']
+        removed_products = meta['removed_products']
+        not_allowed_products = selected_products + removed_products
+        new_index = 0
         for i in range(num_prods):
-            for j in range(i, num_prods):
-                f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
+            if i + 1 in not_allowed_products:
+                continue
+            else:
+                old2new_index[i] = new_index
+                new_index += 1
+
+        for key, val in old2new_index.items():
+            new2old_index[val] = key
+
+        new_product_count = num_prods - len(not_allowed_products)
+        Q_mat = np.zeros((new_product_count, new_product_count))
+
+        for i in range(num_prods):
+            if (i + 1) in removed_products:
+                continue
+            elif (i + 1) in selected_products:
+                for j in range(i, num_prods):
+                    if (j + 1) not in not_allowed_products:
+                        Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+            else:  # i not in no optim products
+                for j in range(i,num_prods):
+                    if (j + 1) in removed_products:
+                        continue
+                    elif (j + 1) in selected_products:
+                        Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+                    else:  # J not in no optim products
+                        Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+        with open(input_filename, 'w') as f:
+            f.write(f'{new_product_count} {int(new_product_count * (new_product_count + 1) / 2)}\n')
+            for i in range(new_product_count):
+                for j in range(i, new_product_count):
+                    f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
 
     start_time = time.time()
     heuristic_list = meta['heuristic_list']
@@ -215,7 +350,8 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     mutex = Lock()
     for i in range(len(heuristic_list)):
         worker = Thread(target=compare_qip_run_c_subroutine,
-                        args=(input_filename, MQLib_dir, heuristic_list[i], time_limit, output_filename, results, mutex))
+                        args=(
+                            input_filename, MQLib_dir, heuristic_list[i], time_limit, output_filename, results, mutex))
         threadlist.append(worker)
         worker.start()
     for t in threadlist:
@@ -226,6 +362,10 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     for heuristic in results.keys():
         if results[heuristic][0] > maxRev:
             maxRev, maxSet = results[heuristic]
+    # Convert To Old Indexing if required
+    if is_improved_qubo:
+        maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
+
     return maxRev, maxSet, time_taken
 
 
@@ -268,6 +408,9 @@ def binSearchCompare_qip_approx(num_prods, C, rcm, meta, K):
     vij_arr = rcm['v2']
     is_debug = meta['print_debug']
     optim_type = meta['type']
+    is_improved_qubo = False
+    if ('improved_qubo' in meta.keys()):
+        is_improved_qubo = True
 
     if C < num_prods:
         if is_debug:

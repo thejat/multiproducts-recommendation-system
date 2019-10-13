@@ -2,6 +2,18 @@
 Following is list of algorithms, and their variations used for optimization.
 """
 
+
+BINSEARCHIMPROVED_QIP_MTHREAD = {
+    'solution_id': 'binSearchImproved_qip_approx_multithread',
+    'algo': 'binary-search-improved',
+    'comparison_function': 'qip-approx-mthread',
+    'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
+    'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
+    'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
+    'time_multiplier': 0.0001,
+    'MQLib_dir': '../MQLib/'
+}
+
 """
 Binary Search with MIPS Formulation using KNN for Comparision Step
 """
