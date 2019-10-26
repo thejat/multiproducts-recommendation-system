@@ -11,6 +11,9 @@ import cplex
 import docplex.mp.model as cpx
 from threading import Thread, Lock
 import pickle
+import logging
+
+logger = logging.getLogger(__name__)
 
 '''
 Algorithms for RCM Optimization
@@ -40,6 +43,11 @@ def run_rcm_optimization(algorithm, num_prods, C, rcm_model, meta):
     global optim_methods_src
     optim_function = optim_methods_src[algorithm]
     maxRev, maxSet, timeTaken = optim_function(num_prods, C, rcm_model, meta)
+    if 'comparison_function' in meta.keys():
+        logger.info(
+            f"Binary Search: {meta['comparison_function']},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{timeTaken}")
+    else:
+        logger.info(f"Algorithm: {algorithm},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{timeTaken}")
     return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken}
 
 
@@ -62,7 +70,6 @@ def init_comparision_methods():
         'qip-exact': binSearchCompare_qip_exact,
         'qip-approx': binSearchCompare_qip_approx,
         'qip-approx-mthread': binSearchCompare_qip_approx_multithread,
-        # 'qip-approx-mthread-constrainted':binSearchCompare_qip_approx_constrained_multithread,
         'ip-exact': binSearchCompare_ip_exact
     }
 
@@ -71,23 +78,18 @@ def init_comparision_methods():
 def rcm_revenue_ordered(num_prods, C, rcm, meta):
     improved_lower_bound = 0
     price_list = rcm['p'][1:]
-    start_time=time.time()
+    start_time = time.time()
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
-    rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
-    maxSet = None
-    for i in range(2, len(price_sorted_products)):
-        rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
-        if (rev_next_ro_set < rev_last_ro_set):
-            maxSet = price_sorted_products[:i]
-            break
-        rev_last_ro_set = rev_next_ro_set
-    maxRev = rev_last_ro_set
-    if maxSet is None:
-        maxSet = price_sorted_products
-    timeTaken = time.time()-start_time
+    maxRev, maxSet = 0, []
+    for i in range(1, len(price_sorted_products) + 1):
+        rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        if rev_ro_set > maxRev:
+            maxRev, maxSet = rev_ro_set, price_sorted_products[:i]
+    timeTaken = time.time() - start_time
     if meta.get('print_results', False) is True:
-        print(meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)
+        logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
     return maxRev, maxSet, timeTaken
+
 
 # ====================RCM Improved Binary Search(with lemmas) Algorithm===================
 
@@ -104,32 +106,41 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     if meta.get('eps', None) is None:
         meta['eps'] = 1e-3
     if 'nn' in meta['comparison_function']:
-        print("Support Not Available for NN Function in imporved Binary Search...")
+        logger.info("Support Not Available for NN Function in imporved Binary Search...")
         raise Exception
 
     st = time.time()
+    solve_time = 0.
     count = 0
     maxSet = None
     meta['is_improved_qubo'] = 1
     ##Heuristic to get optimal Value for L based on Lemma 3"
     L = binSearchImproved_global_lower_bound(num_prods, C, rcm, meta)
+    logger.debug(f"Improved Global Lower Bound For Binary Search : {L}")
     U = 2 * max(p)  # U is the upper bound on the objective
+    iter_count = 1
+    logger.debug(f"Starting Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
     while (U - L) > meta['eps']:
         count += 1
         K = (U + L) / 2
         removed_products = binSearchImproved_removed_products(num_prods, C, rcm, meta, L)
         selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, U)
+        logger.debug(f"Iteration: {iter_count}; U,L:"
+                     f" {U},{L}; #products removed:{len(removed_products)},selected: {len(selected_products)}")
+        iter_count += 1
         meta['selected_products'] = selected_products
         meta['removed_products'] = removed_products
-        if(len(selected_products+removed_products)>=num_prods):
+        if (len(selected_products + removed_products) >= num_prods):
             maxSet = selected_products
             break
         maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
-        # print('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
+        solve_time += queryTimeLog
+        # logger.info('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
         # Add Selected products in mix
-        maxSet  = maxSet + meta['selected_products']
+        maxSet = maxSet + meta['selected_products']
         maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
-
+        logger.debug({f"K:{K}, MaxRev: {maxRev}, Time Taken: {queryTimeLog}"})
+        logger.debug({f"MaxSet: {maxSet}"})
         if maxRev >= K:
             L = K
         else:
@@ -138,8 +149,10 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
     timeTaken = time.time() - st
     if meta.get('print_results', False) is True:
-        print(meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken, ' num iters:',
-              count)
+        logger.info(
+            f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
+    #     logger.info(str((meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken,
+    #                      ' num iters:', count)))
     return maxRev, maxSet, timeTaken
 
 
@@ -194,7 +207,9 @@ def rcm_binary_search(num_prods, C, rcm, meta):
     comparison_function = binSearch_comparision_src[meta['comparison_function']]
     p = rcm['p']
 
-    L = 0  # L is the lower bound on the objective
+    # L = 0  # L is the lower bound on the objective
+    # temp:
+    L = 1e-10
     U = 2 * max(p)  # U is the upper bound on the objective
     if meta.get('eps', None) is None:
         meta['eps'] = 1e-3
@@ -202,7 +217,7 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         # Try to find Index in Cache
         index_cache_filepath = meta['index_filepath']
         if os.path.exists(index_cache_filepath):
-            print(f"Picked Index From cache file {index_cache_filepath}..")
+            logger.info(f"Picked Index From cache file {index_cache_filepath}..")
             index_dict = pickle.load(open(index_cache_filepath, 'rb'))
             comp_function = meta['comparison_function']
             if (comp_function == 'nn-exact'):
@@ -217,13 +232,15 @@ def rcm_binary_search(num_prods, C, rcm, meta):
                                                                                       meta['comparison_function'])
 
     st = time.time()
+    solve_time = 0
     count = 0
     maxSet = None
     while (U - L) > meta['eps']:
         count += 1
         K = (U + L) / 2
         maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
-        # print('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
+        # logger.info('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
+        solve_time += queryTimeLog
         if (maxPseudoRev / rcm['v'][0]) >= K:
             L = K
         else:
@@ -232,8 +249,11 @@ def rcm_binary_search(num_prods, C, rcm, meta):
     maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
     timeTaken = time.time() - st
     if meta.get('print_results', False) is True:
-        print(meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken, ' num iters:',
-              count)
+        logger.info(
+            f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
+        # print(meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken,
+        #       ' num iters:',
+        #       count)
     return maxRev, maxSet, timeTaken
 
 
@@ -247,7 +267,7 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
 
     p.linear_constraints.add(rhs=[C], senses="L")
 
-    obj = np.multiply(rcm['v'][1:], rcm['p'][1:]) - K * rcm['v'][1:]
+    obj = np.multiply(np.array(rcm['v'][1:]), np.array(rcm['p'][1:])) - K * np.array(rcm['v'][1:])
     obj = obj.tolist()
     ub = [1 for i in range(num_prods)]
     cols = [[[0], [1.0]] for i in range(num_prods)]
@@ -268,13 +288,13 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     p.objective.set_quadratic(qmat)
 
     # p.write("qip.lp")
-    # print(qmat)
-    # print(types)
-    # print(p.variables.get_lower_bounds())
-    # print(p.variables.get_upper_bounds())
-    # print(p.variables.get_names())
-    # print(p.linear_constraints.get_num())
-    # print(p.variables.get_num())
+    # logger.info(qmat)
+    # logger.info(types)
+    # logger.info(p.variables.get_lower_bounds())
+    # logger.info(p.variables.get_upper_bounds())
+    # logger.info(p.variables.get_names())
+    # logger.info(p.linear_constraints.get_num())
+    # logger.info(p.variables.get_num())
 
     p.set_log_stream(None)
     p.set_error_stream(None)
@@ -284,12 +304,12 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     st = time.time()
     p.solve()
 
-    # print("\t\tQIP cplex status = ", p.solution.get_status(), ":", p.solution.status[p.solution.get_status()])
-    # print(p.solution.get_values())
+    # logger.info("\t\tQIP cplex status = ", p.solution.get_status(), ":", p.solution.status[p.solution.get_status()])
+    # logger.info(p.solution.get_values())
 
     pseudoRev = p.solution.get_objective_value()
     timeTaken = time.time() - st
-    # print('\t\tTime taken for running the QIP is', timeTaken)
+    # logger.info('\t\tTime taken for running the QIP is', timeTaken)
 
     revSet = []
     x = p.solution.get_values()
@@ -297,10 +317,116 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         if x[i] > 1e-3:
             revSet.append(int(i + 1))
 
-    # print("\t\tQIP pseudo rev:",pseudoRev)
-    # print("\t\tQIP set:", revSet)
+    # logger.info("\t\tQIP pseudo rev:",pseudoRev)
+    # logger.info("\t\tQIP set:", revSet)
 
     return pseudoRev, revSet, timeTaken
+
+
+#
+# def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
+#     maxcut_heuristic_list = ['BURER2002', 'FESTA2002G', 'FESTA2002GPR', 'FESTA2002VNS', 'FESTA2002VNSPR',
+#                              'FESTA2002GVNS',
+#                              'FESTA2002GVNSPR', 'DUARTE2005', 'LAGUNA2009CE', 'LAGUNA2009HCE']
+#
+#     input_filename = meta['QIPApprox_input']
+#     output_filename = meta['QIPApprox_output']
+#     heuristic_list = meta['heuristic_list']
+#     time_limit = meta['time_multiplier'] * num_prods
+#     is_debug = meta['print_debug']
+#     MQLib_dir = meta['MQLib_dir']
+#     p_arr = rcm['p']
+#     v_arr = rcm['v']
+#     vij_arr = rcm['v2']
+#     is_improved_qubo = False
+#     max_repeat_counter = meta['max_repeat_counter']
+#     if ('is_improved_qubo' in meta.keys()):
+#         is_improved_qubo = True
+#         old2new_index, new2old_index = {}, {}
+#
+#     if not is_improved_qubo:
+#         # Setup Input File for approx step
+#         with open(input_filename, 'w') as f:
+#             f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
+#             for i in range(num_prods):
+#                 for j in range(i, num_prods):
+#                     f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
+#     else:
+#         # SetupIndex transfer
+#         selected_products = meta['selected_products']
+#         removed_products = meta['removed_products']
+#         not_allowed_products = selected_products + removed_products
+#         new_index = 0
+#         for i in range(num_prods):
+#             if i + 1 in not_allowed_products:
+#                 continue
+#             else:
+#                 old2new_index[i] = new_index
+#                 new_index += 1
+#
+#         for key, val in old2new_index.items():
+#             new2old_index[val] = key
+#
+#         new_product_count = num_prods - len(not_allowed_products)
+#         Q_mat = np.zeros((new_product_count, new_product_count))
+#
+#         for i in range(num_prods):
+#             if (i + 1) in removed_products:
+#                 continue
+#             elif (i + 1) in selected_products:
+#                 for j in range(i, num_prods):
+#                     if (j + 1) not in not_allowed_products:
+#                         Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+#                                                                                           K)
+#             else:  # i not in no optim products
+#                 for j in range(i, num_prods):
+#                     if (j + 1) in removed_products:
+#                         continue
+#                     elif (j + 1) in selected_products:
+#                         Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+#                                                                                           K)
+#                     else:  # J not in no optim products
+#                         Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+#                                                                                           K)
+#         with open(input_filename, 'w') as f:
+#             f.write(f'{new_product_count} {int(new_product_count * (new_product_count + 1) / 2)}\n')
+#             for i in range(new_product_count):
+#                 for j in range(i, new_product_count):
+#                     f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
+#
+#     start_time = time.time()
+#     heuristic_list = meta['heuristic_list']
+#     time_limit = meta['time_multiplier'] * num_prods
+#     threadlist = []
+#     mutex = Lock()
+#     repeat_counter = 0
+#     maxRev, maxSet = -1, []
+#     while ((repeat_counter <= max_repeat_counter) & (maxRev <= 0)):
+#         logger.debug(f"Revenue: {maxRev}, repeat counter:{repeat_counter}")
+#         results = {}
+#         for i in range(len(heuristic_list)):
+#             worker = Thread(target=compare_qip_run_c_subroutine,
+#                             args=(input_filename, MQLib_dir, heuristic_list[i], (2 ** (repeat_counter)) * time_limit,
+#                                   output_filename, results, mutex))
+#             threadlist.append(worker)
+#             worker.start()
+#         for t in threadlist:
+#             t.join()
+#         for heuristic in results.keys():
+#             if results[heuristic][0] > maxRev:
+#                 maxRev, maxSet = results[heuristic]
+#         repeat_counter += 1
+#     logger.debug(f"Got Results in {repeat_counter + 1} iterations...")
+#     time_taken = time.time() - start_time
+#     # Convert To Old Indexing if required
+#     if is_improved_qubo:
+#         try:
+#             maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
+#         except:
+#             maxSet = []
+#             maxRev = 0
+#
+#     return maxRev, maxSet, time_taken
 
 
 def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
@@ -318,22 +444,44 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     v_arr = rcm['v']
     vij_arr = rcm['v2']
     is_improved_qubo = False
+    max_repeat_counter = meta['max_repeat_counter']
+
     if ('is_improved_qubo' in meta.keys()):
         is_improved_qubo = True
         old2new_index, new2old_index = {}, {}
-
-    if not is_improved_qubo:
-        # Setup Input File for approx step
-        with open(input_filename, 'w') as f:
-            f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
-            for i in range(num_prods):
-                for j in range(i, num_prods):
-                    f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
-    else:
-        # SetupIndex transfer
         selected_products = meta['selected_products']
         removed_products = meta['removed_products']
         not_allowed_products = selected_products + removed_products
+        new_product_count = num_prods - len(not_allowed_products)
+    else:
+        selected_products = None
+        removed_products = None
+        not_allowed_products = None
+        new_product_count = num_prods
+
+    # Create Empty Q matrix with appropriate size
+    num_variables = new_product_count
+    constraints_allowed = False
+    if 'constraints_allowed' in meta.keys():
+        if (meta['constraints_allowed']) & ('max_assortment_size' in meta.keys()):
+            constraints_allowed = True
+    if constraints_allowed:
+        num_variables += meta['max_assortment_size'] - 1
+
+    Q_mat = np.zeros((num_variables, num_variables))
+
+    if not is_improved_qubo:
+        # Setup Input File for approx step
+        for i in range(num_prods):
+            for j in range(i, num_prods):
+                Q_mat[i, j] = compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+        # with open(input_filename, 'w') as f:
+        #     f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
+        #     for i in range(num_prods):
+        #         for j in range(i, num_prods):
+        #             f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
+    else:
+        # SetupIndex transfer
         new_index = 0
         for i in range(num_prods):
             if i + 1 in not_allowed_products:
@@ -345,50 +493,76 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         for key, val in old2new_index.items():
             new2old_index[val] = key
 
-        new_product_count = num_prods - len(not_allowed_products)
-        Q_mat = np.zeros((new_product_count, new_product_count))
-
         for i in range(num_prods):
             if (i + 1) in removed_products:
                 continue
             elif (i + 1) in selected_products:
                 for j in range(i, num_prods):
                     if (j + 1) not in not_allowed_products:
-                        Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+                        Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
             else:  # i not in no optim products
-                for j in range(i,num_prods):
+                for j in range(i, num_prods):
                     if (j + 1) in removed_products:
                         continue
                     elif (j + 1) in selected_products:
-                        Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+                        Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
                     else:  # J not in no optim products
-                        Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
-        with open(input_filename, 'w') as f:
-            f.write(f'{new_product_count} {int(new_product_count * (new_product_count + 1) / 2)}\n')
-            for i in range(new_product_count):
-                for j in range(i, new_product_count):
-                    f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
+                        Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
+
+    if constraints_allowed:
+        penalty = 1e2
+        # penalty = 100
+        max_assortment_size = meta['max_assortment_size']
+        for i in range(num_variables):
+            for j in range(i, num_variables):
+                if i == j:
+                    Q_mat[i, j] = Q_mat[i, j] - (penalty * (1 - (2 * max_assortment_size)))
+                else:
+                    Q_mat[i, j] = Q_mat[i, j] - (penalty)
+        penalty_constant = penalty*(max_assortment_size**2)
+
+    with open(input_filename, 'w') as f:
+        f.write(f'{num_variables} {int(num_variables * (num_variables + 1) / 2)}\n')
+        for i in range(num_variables):
+            for j in range(i, num_variables):
+                f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
 
     start_time = time.time()
     heuristic_list = meta['heuristic_list']
     time_limit = meta['time_multiplier'] * num_prods
     threadlist = []
-    results = {}
     mutex = Lock()
-    for i in range(len(heuristic_list)):
-        worker = Thread(target=compare_qip_run_c_subroutine,
-                        args=(
-                            input_filename, MQLib_dir, heuristic_list[i], time_limit, output_filename, results, mutex))
-        threadlist.append(worker)
-        worker.start()
-    for t in threadlist:
-        t.join()
+    repeat_counter = 0
+    maxRev, maxSet = -1, []
+    while ((repeat_counter <= max_repeat_counter) & (maxRev <= 0)):
+        # logger.info(f"Revenue: {maxRev}, repeat counter:{repeat_counter}")
+        results = {}
+        for i in range(len(heuristic_list)):
+            worker = Thread(target=compare_qip_run_c_subroutine,
+                            args=(input_filename, MQLib_dir, heuristic_list[i], (2 ** (repeat_counter)) * time_limit,
+                                  output_filename, results, mutex))
+            threadlist.append(worker)
+            worker.start()
+        for t in threadlist:
+            t.join()
+        for heuristic in results.keys():
+            # Remove Slack Variables from maxSet
+            maxSetheuristic = [xs for xs in results[heuristic][1] if xs <= new_product_count]
+            if constraints_allowed:
+                # maxRevheuristic = rcm_calc_revenue(maxSetheuristic, rcm['p'], rcm, num_prods)
+                maxRevheuristic = results[heuristic][0] - penalty_constant
+                if maxRevheuristic > maxRev:
+                    maxRev, maxSet = maxRevheuristic, maxSetheuristic
+            else:
+                if results[heuristic][0] > maxRev:
+                    maxRev, maxSet = results[heuristic][0], maxSetheuristic
+        repeat_counter += 1
+    # logger.info(f"Got Results in {repeat_counter + 1} iterations...")
     time_taken = time.time() - start_time
 
-    maxRev, maxSet = -1, None
-    for heuristic in results.keys():
-        if results[heuristic][0] > maxRev:
-            maxRev, maxSet = results[heuristic]
     # Convert To Old Indexing if required
     if is_improved_qubo:
         try:
@@ -398,7 +572,6 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
             maxRev = 0
 
     return maxRev, maxSet, time_taken
-
 
 
 def compare_qip_run_c_subroutine(input_filename, MQLib_dir, heuristic, time_limit, output_filename, results, mutex):
@@ -446,7 +619,7 @@ def binSearchCompare_qip_approx(num_prods, C, rcm, meta, K):
 
     if C < num_prods:
         if is_debug:
-            print("Not Using C provided by Function, Choosing C to be equal to num_prods(%d)" % num_prods)
+            logger.info("Not Using C provided by Function, Choosing C to be equal to num_prods(%d)" % num_prods)
 
     # Setup Input File for approx step
     with open(input_filename, 'w') as f:
@@ -513,7 +686,7 @@ def binSearchCompare_qip_approx(num_prods, C, rcm, meta, K):
         end_time = time.time()
 
     if is_debug:
-        print("QUBO Approximation for K=%d took %.3f secs..." % (K, end_time - start_time))
+        logger.info("QUBO Approximation for K=%d took %.3f secs..." % (K, end_time - start_time))
     # Read output to get solution
     with open(output_filename) as f:
         summary_line = f.readline()
@@ -546,7 +719,7 @@ def compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K):
 # --------------------BinSearch Compare Step: Linear Integer Programming -------------------
 
 def binSearchCompare_ip_exact(num_prods, C, rcm, meta, K):
-    print("binSearchCompare_ip_exact Not implemented yet")
+    logger.info("binSearchCompare_ip_exact Not implemented yet")
     return None
 
 
@@ -579,7 +752,7 @@ def binSearchCompare_nn(num_prods, C, rcm, meta, K):
     # realRev = rcm_calc_revenue(nn_set, rcm['p'], rcm, num_prods)
     queryTimeLog = None
 
-    # print('K:',K,' inner num_prods rev by v0:',pseudoRev/rcm['v'][0],' real rev:',realRev,' ast:',nn_set)
+    # logger.info('K:',K,' inner num_prods rev by v0:',pseudoRev/rcm['v'][0],' real rev:',realRev,' ast:',nn_set)
 
     return pseudoRev, nn_set, queryTimeLog
 
@@ -630,7 +803,7 @@ def compare_nn_preprocess(num_prods, C, p, algo, nEst=10, nCand=4):
     db.fit(pts)
 
     build_time = time.time() - t0
-    print("\t\tIndex build time: ", build_time)
+    logger.info("\t\tIndex build time: ", build_time)
 
     return db, build_time, normConst, ptsTemp
 
@@ -645,7 +818,7 @@ def rcm_brute_force_search(num_prods, C, rcm, meta=None, K=None):
     revs = []
     ast_list = []
     st = time.time()
-    print("Brute Force Method: Fixed Max Assortment Size to be less than 10")
+    logger.info("Brute Force Method: Fixed Max Assortment Size to be less than 10")
     maxAssortSize = min(10, C)
     for size in range(1, maxAssortSize + 1):
         for ast in combinations(range(1, num_prods + 1), size):
@@ -658,7 +831,7 @@ def rcm_brute_force_search(num_prods, C, rcm, meta=None, K=None):
 
     if meta is not None:
         if meta.get('print_results', False) is not False:
-            print('best rev:', rev_best, ' ast:', ast_best, ' time taken:', timeTaken)
+            logger.info('best rev:', rev_best, ' ast:', ast_best, ' time taken:', timeTaken)
 
     return rev_best, ast_best, timeTaken
 
@@ -745,12 +918,12 @@ def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
 
     timeTaken = time.time() - st
 
-    # print(set_current,p,rcm,num_prods)
+    # logger.info(set_current,p,rcm,num_prods)
     rev_adx = rcm_calc_revenue(set_current, p, rcm, num_prods)
-    print("\t\tNumber of times rcm_calc_revenue is called:", rev_cal_counter)
-    print('rev adx:', rev_adx)
-    print("\t\tProducts in the adxopt assortment are", set_current)
-    print('\t\tTime taken for running adxopt is', timeTaken)
+    logger.info("\t\tNumber of times rcm_calc_revenue is called:", rev_cal_counter)
+    logger.info('rev adx:', rev_adx)
+    logger.info("\t\tProducts in the adxopt assortment are", set_current)
+    logger.info('\t\tTime taken for running adxopt is', timeTaken)
 
     return rev_adx, set_current, timeTaken
 
@@ -871,10 +1044,10 @@ def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_
     rev_adx = rcm_calc_revenue(set_current, p, rcm, num_prods)
     if meta is not None:
         if meta.get('print_results', False) is not False:
-            print("\t\tNumber of times rcm_calc_revenue is called:", rev_cal_counter)
-            print('rev adx:', rev_adx)
-            print("\t\tProducts in the adxopt assortment are", set_current)
-            print('\t\tTime taken for running adxopt is', timeTaken)
+            logger.info("\t\tNumber of times rcm_calc_revenue is called:", rev_cal_counter)
+            logger.info('rev adx:', rev_adx)
+            logger.info("\t\tProducts in the adxopt assortment are", set_current)
+            logger.info('\t\tTime taken for running adxopt is', timeTaken)
 
     return rev_adx, set_current, timeTaken
 
@@ -970,28 +1143,28 @@ def rcm_get_assortment_probs(given_set, rcm, num_prods):
     for idx, x in enumerate(given_set):
         set2idx[x] = idx + 1
         idx2set[idx + 1] = x
-    # print(set2idx,idx2set)
+    # logger.info(set2idx,idx2set)
 
     # Obtain probabilities, no choice only captured in normalization
     probs = {}
     normalization_temp = rcm['v'][0]
-    # print(normalization_temp)
+    # logger.info(normalization_temp)
     # single set choice
     if len(given_set) > 0:
         for ast in combinations(range(1, len(given_set) + 1), 1):
             set_char_vector = set_char_from_ast(idx2set[ast[0]], num_prods)
             probs[set_char_vector] = rcm['v'][idx2set[ast[0]]]
             normalization_temp += probs[set_char_vector]
-        # print(normalization_temp)
-        # print(ast,rcm['v'][idx2set[ast[0]]])
+        # logger.info(normalization_temp)
+        # logger.info(ast,rcm['v'][idx2set[ast[0]]])
     # two set choice
     if len(given_set) > 1:
         for ast in combinations(range(1, len(given_set) + 1), 2):
             set_char_vector = set_char_from_ast([idx2set[x] for x in ast], num_prods)
             probs[set_char_vector] = rcm['v2'][(idx2set[ast[0]], idx2set[ast[1]])]
             normalization_temp += probs[set_char_vector]
-        # print(normalization_temp)
-        # print(ast,rcm['v2'][(ast[0],ast[1])])
+        # logger.info(normalization_temp)
+        # logger.info(ast,rcm['v2'][(ast[0],ast[1])])
 
     for x in probs:
         probs[x] /= normalization_temp
