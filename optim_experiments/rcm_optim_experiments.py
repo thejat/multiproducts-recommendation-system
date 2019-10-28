@@ -50,7 +50,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                             rcm_solution = run_rcm_optimization(meta['algo'], num_prods, num_prods, rcm_model, meta)
                             sol_dict.update(rcm_solution)
                             with open(model_solve_filepath, 'wb') as f:
-                                pickle.dump(sol_dict.update(model_dict), f)
+                                sol_dict.update(model_dict)
+                                pickle.dump(sol_dict,   f)
                                 logger.info(f"Optimized RCM Model {model_solve_filepath.split('/')[-1]}...\n")
                         else:
                             with open(model_solve_filepath, 'rb') as f:

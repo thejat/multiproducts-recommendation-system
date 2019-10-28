@@ -11,6 +11,16 @@ rcm_solution_dir = 'results/rcm_optim/%s_experiments/rcm_solutions'
 rcm_summary_dir = 'results/rcm_optim/%s_experiments'
 
 experiment_set_dict = {
+    'spc_test': {
+        'price_range': [10000],
+        'num_prods': [2000, 2500, 3000],
+        'repeat_count': 1,
+        'prob_v0': None,
+        'test_only': True,
+        'max_problem_size': 1000,
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_SPC, BINSEARCHIMPROVED_QIP_MTHREAD]
+    },
+
     'synthetic_model_test': {
         'num_prods': range(500, 1000, 50),
         'repeat_count': 1,
@@ -18,7 +28,7 @@ experiment_set_dict = {
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'test_only': True,
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     # Revenue ordered assortments test
     'constrained_qubo_test': {
@@ -38,7 +48,8 @@ experiment_set_dict = {
         'repeat_count': 1,
         'prob_v0': None,
         'test_only': True,
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD]
+        'max_problem_size': 1000,
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_SPC]
     },
     # Revenue ordered assortments test
     'revenue_ordered_test': {
@@ -59,9 +70,9 @@ experiment_set_dict = {
     # DevQA Config For Improved Binary Set
     'devqa_binary_search_improved': {
         'price_range': [100],
-        'num_prods': list(range(5, 25, 5)),
-        'repeat_count': 1,
-        'algorithm_list': [MIXED_IP, BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCH_QIP_MTHREAD]
+        'num_prods': list(range(20, 380, 20)),
+        'repeat_count': 3,
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCH_QIP_MTHREAD]
     },
     # Small Experiments Config
     'small': {

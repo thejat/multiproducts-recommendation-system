@@ -4,6 +4,23 @@ Following is list of algorithms, and their variations used for optimization.
 
 """
 Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
+and subpartitioning problem using spectral clustering
+"""
+BINSEARCH_QIP_MTHREAD_SPC = {
+    'solution_id': 'binSearch_qip_approx_multithread_spc',
+    'algo': 'binary-search-improved',
+    'clusters_allowed': True,
+    'comparison_function': 'qip-approx-spc',
+    'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
+    'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
+    'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
+    'time_multiplier': 0.0001,
+    'max_repeat_counter': 3,
+    'MQLib_dir': '../MQLib/'
+}
+
+"""
+Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
  along with constraint on num of products in assortment
 """
 

@@ -12,6 +12,9 @@ import docplex.mp.model as cpx
 from threading import Thread, Lock
 import pickle
 import logging
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.cluster import SpectralClustering
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +58,7 @@ def run_rcm_optimization(algorithm, num_prods, C, rcm_model, meta):
 Algorithm 1: Binary Search Algorithm
 Comparision Step Methods:
   1- NN Exact Comparision
-  2- NN Approximate COmparision
+  2- NN Approximate Comparision
   3- QIP Absolute Comparision
   4- QIP heuristics Comparision
   5- IP Absolute Comparision
@@ -69,6 +72,7 @@ def init_comparision_methods():
         'nn-approx': binSearchCompare_nn,
         'qip-exact': binSearchCompare_qip_exact,
         'qip-approx': binSearchCompare_qip_approx,
+        'qip-approx-spc': binSearchCompare_qip_approx_spc,
         'qip-approx-mthread': binSearchCompare_qip_approx_multithread,
         'ip-exact': binSearchCompare_ip_exact
     }
@@ -108,6 +112,12 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     if 'nn' in meta['comparison_function']:
         logger.info("Support Not Available for NN Function in imporved Binary Search...")
         raise Exception
+    clusters_allowed = False
+    if 'clusters_allowed' in meta.keys():
+        if (meta['clusters_allowed']) & ('max_problem_size' in meta.keys()):
+            clusters_allowed = True
+    if clusters_allowed:
+        meta['num_clusters'], meta['cluster_ids'] = binSearchClusterProducts(num_prods, C, rcm, meta)
 
     st = time.time()
     solve_time = 0.
@@ -124,7 +134,7 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         count += 1
         K = (U + L) / 2
         removed_products = binSearchImproved_removed_products(num_prods, C, rcm, meta, L)
-        selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, U)
+        selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, K)
         logger.debug(f"Iteration: {iter_count}; U,L:"
                      f" {U},{L}; #products removed:{len(removed_products)},selected: {len(selected_products)}")
         iter_count += 1
@@ -195,6 +205,29 @@ def binSearchImproved_selected_products(num_prods, C, rcm, meta, upper_limit):
     return selected_products
 
 
+def binSearchClusterProducts(num_prods, C, rcm, meta):
+    V_mat = np.zeros((num_prods, num_prods))
+    for i in range(num_prods):
+        V_mat[i, i] = rcm['v'][i + 1]
+        for j in range(i + 1, num_prods):
+            V_mat[i, j] = rcm['v2'][tuple([i + 1, j + 1])]
+            V_mat[j, i] = V_mat[i, j]
+
+    max_cluster_variable_count = V_mat.shape[0]
+    cluster_labels = np.zeros(max_cluster_variable_count)
+
+    # Break Problem in Parts based on nearest block diagonalization
+    num_clusters = 1
+    while (max_cluster_variable_count > meta['max_problem_size']):
+        num_clusters += 1
+        spc = SpectralClustering(n_clusters=num_clusters, affinity='nearest_neighbors')
+        spc.fit(V_mat)
+        max_cluster_variable_count = pd.Series(spc.labels_).value_counts().iloc[0]
+        cluster_labels = spc.labels_
+
+    return num_clusters, cluster_labels
+
+
 # ====================RCM Binary Search Algorithm===================
 
 def rcm_binary_search(num_prods, C, rcm, meta):
@@ -230,6 +263,12 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         else:
             meta['db'], _, meta['normConst'], meta['ptsTemp'] = compare_nn_preprocess(num_prods, C, rcm['p'],
                                                                                       meta['comparison_function'])
+    clusters_allowed = False
+    if 'clusters_allowed' in meta.keys():
+        if (meta['clusters_allowed']) & ('max_problem_size' in meta.keys()):
+            clusters_allowed = True
+    if clusters_allowed:
+        meta['num_clusters'], meta['cluster_ids'] = binSearchClusterProducts(num_prods, C, rcm, meta)
 
     st = time.time()
     solve_time = 0
@@ -323,110 +362,169 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     return pseudoRev, revSet, timeTaken
 
 
-#
-# def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
-#     maxcut_heuristic_list = ['BURER2002', 'FESTA2002G', 'FESTA2002GPR', 'FESTA2002VNS', 'FESTA2002VNSPR',
-#                              'FESTA2002GVNS',
-#                              'FESTA2002GVNSPR', 'DUARTE2005', 'LAGUNA2009CE', 'LAGUNA2009HCE']
-#
-#     input_filename = meta['QIPApprox_input']
-#     output_filename = meta['QIPApprox_output']
-#     heuristic_list = meta['heuristic_list']
-#     time_limit = meta['time_multiplier'] * num_prods
-#     is_debug = meta['print_debug']
-#     MQLib_dir = meta['MQLib_dir']
-#     p_arr = rcm['p']
-#     v_arr = rcm['v']
-#     vij_arr = rcm['v2']
-#     is_improved_qubo = False
-#     max_repeat_counter = meta['max_repeat_counter']
-#     if ('is_improved_qubo' in meta.keys()):
-#         is_improved_qubo = True
-#         old2new_index, new2old_index = {}, {}
-#
-#     if not is_improved_qubo:
-#         # Setup Input File for approx step
-#         with open(input_filename, 'w') as f:
-#             f.write(f'{num_prods} {int(num_prods * (num_prods + 1) / 2)}\n')
-#             for i in range(num_prods):
-#                 for j in range(i, num_prods):
-#                     f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
-#     else:
-#         # SetupIndex transfer
-#         selected_products = meta['selected_products']
-#         removed_products = meta['removed_products']
-#         not_allowed_products = selected_products + removed_products
-#         new_index = 0
-#         for i in range(num_prods):
-#             if i + 1 in not_allowed_products:
-#                 continue
-#             else:
-#                 old2new_index[i] = new_index
-#                 new_index += 1
-#
-#         for key, val in old2new_index.items():
-#             new2old_index[val] = key
-#
-#         new_product_count = num_prods - len(not_allowed_products)
-#         Q_mat = np.zeros((new_product_count, new_product_count))
-#
-#         for i in range(num_prods):
-#             if (i + 1) in removed_products:
-#                 continue
-#             elif (i + 1) in selected_products:
-#                 for j in range(i, num_prods):
-#                     if (j + 1) not in not_allowed_products:
-#                         Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-#                                                                                           K)
-#             else:  # i not in no optim products
-#                 for j in range(i, num_prods):
-#                     if (j + 1) in removed_products:
-#                         continue
-#                     elif (j + 1) in selected_products:
-#                         Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-#                                                                                           K)
-#                     else:  # J not in no optim products
-#                         Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-#                                                                                           K)
-#         with open(input_filename, 'w') as f:
-#             f.write(f'{new_product_count} {int(new_product_count * (new_product_count + 1) / 2)}\n')
-#             for i in range(new_product_count):
-#                 for j in range(i, new_product_count):
-#                     f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
-#
-#     start_time = time.time()
-#     heuristic_list = meta['heuristic_list']
-#     time_limit = meta['time_multiplier'] * num_prods
-#     threadlist = []
-#     mutex = Lock()
-#     repeat_counter = 0
-#     maxRev, maxSet = -1, []
-#     while ((repeat_counter <= max_repeat_counter) & (maxRev <= 0)):
-#         logger.debug(f"Revenue: {maxRev}, repeat counter:{repeat_counter}")
-#         results = {}
-#         for i in range(len(heuristic_list)):
-#             worker = Thread(target=compare_qip_run_c_subroutine,
-#                             args=(input_filename, MQLib_dir, heuristic_list[i], (2 ** (repeat_counter)) * time_limit,
-#                                   output_filename, results, mutex))
-#             threadlist.append(worker)
-#             worker.start()
-#         for t in threadlist:
-#             t.join()
-#         for heuristic in results.keys():
-#             if results[heuristic][0] > maxRev:
-#                 maxRev, maxSet = results[heuristic]
-#         repeat_counter += 1
-#     logger.debug(f"Got Results in {repeat_counter + 1} iterations...")
-#     time_taken = time.time() - start_time
-#     # Convert To Old Indexing if required
-#     if is_improved_qubo:
-#         try:
-#             maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
-#         except:
-#             maxSet = []
-#             maxRev = 0
-#
-#     return maxRev, maxSet, time_taken
+def binSearchCompare_qip_approx_spc(num_prods, C, rcm, meta, K):
+    maxcut_heuristic_list = ['BURER2002', 'FESTA2002G', 'FESTA2002GPR', 'FESTA2002VNS', 'FESTA2002VNSPR',
+                             'FESTA2002GVNS',
+                             'FESTA2002GVNSPR', 'DUARTE2005', 'LAGUNA2009CE', 'LAGUNA2009HCE']
+
+    input_filename = meta['QIPApprox_input']
+    output_filename = meta['QIPApprox_output']
+    heuristic_list = meta['heuristic_list']
+    is_debug = meta['print_debug']
+    MQLib_dir = meta['MQLib_dir']
+    p_arr = rcm['p']
+    v_arr = rcm['v']
+    vij_arr = rcm['v2']
+    is_improved_qubo = False
+
+    if 'is_improved_qubo' in meta.keys():
+        is_improved_qubo = True
+        old2new_index, new2old_index = {}, {}
+        selected_products = meta['selected_products']
+        removed_products = meta['removed_products']
+        not_allowed_products = selected_products + removed_products
+        new_product_count = num_prods - len(not_allowed_products)
+    else:
+        selected_products = None
+        removed_products = None
+        not_allowed_products = None
+        new_product_count = num_prods
+
+    # Create Empty Q matrix with appropriate size
+    num_variables = new_product_count
+    Q_mat = np.zeros((num_variables, num_variables))
+
+    if not is_improved_qubo:
+        # Setup Input File for approx step
+        for i in range(num_prods):
+            for j in range(i, num_prods):
+                Q_mat[i, j] = compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+    else:
+        # SetupIndex transfer
+        new_index = 0
+        for i in range(num_prods):
+            if i + 1 in not_allowed_products:
+                continue
+            else:
+                old2new_index[i] = new_index
+                new_index += 1
+
+        for key, val in old2new_index.items():
+            new2old_index[val] = key
+
+        for i in range(num_prods):
+            if (i + 1) in removed_products:
+                continue
+            elif (i + 1) in selected_products:
+                for j in range(i, num_prods):
+                    if (j + 1) not in not_allowed_products:
+                        Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
+            else:  # i not in no optim products
+                for j in range(i, num_prods):
+                    if (j + 1) in removed_products:
+                        continue
+                    elif (j + 1) in selected_products:
+                        Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
+                    else:  # J not in no optim products
+                        Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+                                                                                          K)
+
+    maxSetMap = {}
+    maxRevMap = {}
+    Q_mat_index = np.arange(num_variables)
+    if is_improved_qubo:
+        new_cluster_ids = np.zeros(len(old2new_index.keys()))
+        for i in range(new_cluster_ids.shape[0]):
+            new_cluster_ids[i] = meta['cluster_ids'][new2old_index[i]]
+        Q_mat_label_map = {cluster_id: Q_mat_index[new_cluster_ids == cluster_id] for cluster_id in
+                           range(meta['num_clusters'])}
+    else:
+        Q_mat_label_map = {cluster_id: Q_mat_index[meta['cluster_ids'] == cluster_id] for cluster_id in
+                           range(meta['num_clusters'])}
+    mutex_cluster = Lock()
+    cluster_threadlist = []
+    start_time = time.time()
+    for i in range(meta['num_clusters']):
+        cluster_id = i
+        Q_mat_cluster = Q_mat[Q_mat_label_map[cluster_id], :]
+        Q_mat_cluster = Q_mat_cluster[:, Q_mat_label_map[cluster_id]]
+        cluster_worker = Thread(target=cluster_optim_qip_run_python_subroutine,
+                                args=(cluster_id, Q_mat_cluster, Q_mat_label_map, input_filename, MQLib_dir, meta,
+                                      output_filename, maxSetMap, maxRevMap,
+                                      mutex_cluster))
+        cluster_worker.start()
+        cluster_threadlist.append(cluster_worker)
+
+    for t in cluster_threadlist:
+        t.join()
+
+    time_taken = time.time() - start_time
+    maxSet = np.concatenate(list(maxSetMap.values()))
+    x_vec = np.zeros(num_variables, dtype=bool)
+    for item in maxSet:
+        x_vec[int(item) - 1] = 1
+    Q_res = Q_mat[x_vec, :]
+    Q_res = Q_res[:, x_vec]
+    maxRev = np.sum(Q_res)
+
+    # Convert To Old Indexing if required
+    if ('is_improved_qubo' in meta.keys()):
+        try:
+            maxSet = [(new2old_index[i - 1] + 1) for i in maxSet]
+        except:
+            maxSet = []
+            maxRev = 0
+
+    return maxRev, maxSet, time_taken
+
+
+def cluster_optim_qip_run_python_subroutine(cluster_id, Q_mat_cluster, Q_mat_label_map, input_filename, MQLib_dir, meta,
+                                            output_filename, maxSetMap,
+                                            maxRevMap, mutex_cluster):
+    num_variables_cluster_id = Q_mat_cluster.shape[0]
+    cluster_input_filename = f"{'/'.join(input_filename.split('/')[:-1])}/{cluster_id}_{input_filename.split('/')[-1]}"
+    cluster_output_filename = f"{'/'.join(output_filename.split('/')[:-1])}/{cluster_id}_{output_filename.split('/')[-1]}"
+    with open(cluster_input_filename, 'w') as f:
+        f.write(
+            f'{num_variables_cluster_id} {int(num_variables_cluster_id * (num_variables_cluster_id + 1) / 2)}\n')
+        for i in range(num_variables_cluster_id):
+            for j in range(i, num_variables_cluster_id):
+                f.write(f'{i + 1} {j + 1} {Q_mat_cluster[i][j]}\n')
+    start_time = time.time()
+    heuristic_list = meta['heuristic_list']
+    time_limit = meta['time_multiplier'] * num_variables_cluster_id
+    threadlist = []
+    mutex = Lock()
+    repeat_counter = 0
+    maxRev, maxSet = -1, []
+    while (repeat_counter <= meta['max_repeat_counter']) & (maxRev <= 0):
+        # logger.info(f"Revenue: {maxRev}, repeat counter:{repeat_counter}")
+        results = {}
+        for i in range(len(heuristic_list)):
+            worker = Thread(target=compare_qip_run_c_subroutine,
+                            args=(
+                                cluster_input_filename, MQLib_dir, heuristic_list[i],
+                                (2 ** (repeat_counter)) * time_limit,
+                                cluster_output_filename, results, mutex))
+            threadlist.append(worker)
+            worker.start()
+        for t in threadlist:
+            t.join()
+        for heuristic in results.keys():
+            if results[heuristic][0] > maxRev:
+                maxRev, maxSet = results[heuristic][0], results[heuristic][1]
+        repeat_counter += 1
+    # logger.info(f"Got Results in {repeat_counter + 1} iterations...")
+    time_taken = time.time() - start_time
+
+    mutex_cluster.acquire()
+    maxSetMap[cluster_id] = Q_mat_label_map[cluster_id][list(np.array(maxSet)-1)]
+    maxSetMap[cluster_id] = [xr + 1 for xr in maxSetMap[cluster_id]]
+    maxRevMap[cluster_id] = maxRev
+    mutex_cluster.release()
+    return None
 
 
 def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
@@ -522,7 +620,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
                     Q_mat[i, j] = Q_mat[i, j] - (penalty * (1 - (2 * max_assortment_size)))
                 else:
                     Q_mat[i, j] = Q_mat[i, j] - (penalty)
-        penalty_constant = penalty*(max_assortment_size**2)
+        penalty_constant = penalty * (max_assortment_size ** 2)
 
     with open(input_filename, 'w') as f:
         f.write(f'{num_variables} {int(num_variables * (num_variables + 1) / 2)}\n')
