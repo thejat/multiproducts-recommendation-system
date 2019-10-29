@@ -14,7 +14,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_list, parent_model_file, prod_count_list, repeat_count,
+def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_list, parent_model_file,
+                           prod_count_list, repeat_count,
                            output_dir='tmp/solutions/rcm_models/v2'):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -51,13 +52,14 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                             sol_dict.update(rcm_solution)
                             with open(model_solve_filepath, 'wb') as f:
                                 sol_dict.update(model_dict)
-                                pickle.dump(sol_dict,   f)
+                                pickle.dump(sol_dict, f)
                                 logger.info(f"Optimized RCM Model {model_solve_filepath.split('/')[-1]}...\n")
                         else:
                             with open(model_solve_filepath, 'rb') as f:
                                 sol_dict = pickle.load(f)
-                                del sol_dict['rcm_model']
                             logger.info(f"Retrieved RCM Solution {model_solve_filepath.split('/')[-1]}...\n")
+                        if 'rcm_model' in sol_dict.keys():
+                            del sol_dict['rcm_model']
                         experiment_summary.append(sol_dict)
                     except Exception as e:
                         logger.error(f"\n\nFailed For {model_filepath}")
@@ -76,15 +78,16 @@ def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='t
     for price_range in price_range_list:
         for num_prod in prod_count_list:
             for i in range(repeat_count):
-                model_dict = {'price_range': price_range, 'num_prod': num_prod, 'repeat_id': i,
-                              'time_of_creation': time_now}
-                rcm_model = generate_two_restricted_choice_model(price_range, num_prod, prob_v0=prob_v0)
-                model_dict.update({'rcm_model': rcm_model})
                 dump_filename = f'rcm_model_{price_range}_{num_prod}_{i}.pkl'
-                with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
-                    pickle.dump(model_dict, f)
-                    logger.info(
-                        f"Created RCM Model for price range: {price_range}, num products:{num_prod}, repeat_id:{i}")
+                if not os.path.exists(f'{dump_dir}/{dump_filename}'):
+                    model_dict = {'price_range': price_range, 'num_prod': num_prod, 'repeat_id': i,
+                                  'time_of_creation': time_now}
+                    rcm_model = generate_two_restricted_choice_model(price_range, num_prod, prob_v0=prob_v0)
+                    model_dict.update({'rcm_model': rcm_model})
+                    with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
+                        pickle.dump(model_dict, f)
+                        logger.info(
+                            f"Created RCM Model for price range: {price_range}, num products:{num_prod}, repeat_id:{i}")
 
     return None
 
@@ -100,15 +103,17 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
 
     for num_prod in prod_count_list:
         for i in range(repeat_count):
-            model_dict = {'parent_model': parent_modelname, 'num_prod': num_prod, 'repeat_id': i,
-                          'time_of_creation': time_now}
-            rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0)
-            model_dict.update({'rcm_model': rcm_model})
             dump_filename = f'rcm_model_{parent_modelname}_{num_prod}_{i}.pkl'
-            with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
-                pickle.dump(model_dict, f)
-                logger.info(
-                    f"Created RCM Model for parent model: {parent_modelname}, num products:{num_prod}, repeat_id:{i}")
+            if not os.path.exists(f'{dump_dir}/{dump_filename}'):
+                model_dict = {'parent_model': parent_modelname, 'num_prod': num_prod, 'repeat_id': i,
+                              'time_of_creation': time_now}
+                rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0)
+                model_dict.update({'rcm_model': rcm_model})
+                # dump_filename = f'rcm_model_{parent_modelname}_{num_prod}_{i}.pkl'
+                with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
+                    pickle.dump(model_dict, f)
+                    logger.info(
+                        f"Created RCM Model for parent model: {parent_modelname}, num products:{num_prod}, repeat_id:{i}")
 
     return None
 

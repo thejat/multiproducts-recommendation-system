@@ -65,16 +65,17 @@ def dump_ucm_models(price_range_list, prod_count_list, Hset_multiplier_list, rep
             for Hset_multiplier in Hset_multiplier_list:
                 n_Hset_count = int(num_prod * (num_prod - 1) * Hset_multiplier / 2)
                 for i in range(repeat_count):
-                    model_dict = {'price_range': price_range, 'num_prod': num_prod,
-                                  'nHset_count': n_Hset_count, 'repeat_id': i,
-                                  'time_of_creation': time_now}
-                    ucm_model = generate_universal_choice_model(price_range, num_prod, n_Hset_count)
-                    model_dict.update({'ucm_model': ucm_model})
                     dump_filename = f'ucm_model_{price_range}_{num_prod}_{n_Hset_count}_{i}.pkl'
-                    with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
-                        pickle.dump(model_dict, f)
-                        print(
-                            f"Created UCM Model for price range: {price_range}, num products:{num_prod}, "
-                            f"Hset_count:{n_Hset_count} repeat_id:{i}")
+                    if not os.path.exists(f'{dump_dir}/{dump_filename}'):
+                        model_dict = {'price_range': price_range, 'num_prod': num_prod,
+                                      'nHset_count': n_Hset_count, 'repeat_id': i,
+                                      'time_of_creation': time_now}
+                        ucm_model = generate_universal_choice_model(price_range, num_prod, n_Hset_count)
+                        model_dict.update({'ucm_model': ucm_model})
+                        with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
+                            pickle.dump(model_dict, f)
+                            print(
+                                f"Created UCM Model for price range: {price_range}, num products:{num_prod}, "
+                                f"Hset_count:{n_Hset_count} repeat_id:{i}")
 
     return None

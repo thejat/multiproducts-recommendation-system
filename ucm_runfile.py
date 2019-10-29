@@ -20,8 +20,8 @@ for experiment_id in experiment_id_list:
     price_range_list = experiment_set_dict[experiment_id]['price_range']
     Hset_multiplier_list = experiment_set_dict[experiment_id]['Hset_multiplier_list']
 
-    if not os.path.exists(model_dir):
-        dump_ucm_models(price_range_list, num_prods, Hset_multiplier_list, repeat_count, dump_dir=model_dir)
+
+    dump_ucm_models(price_range_list, num_prods, Hset_multiplier_list, repeat_count, dump_dir=model_dir)
 
     algorithm_list = experiment_set_dict[experiment_id]['algorithm_list']
     experiment_summary = run_ucm_experiments_v2(model_dir=model_dir,

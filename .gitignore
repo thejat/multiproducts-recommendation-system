@@ -15,3 +15,4 @@ tmp*
 .idea/
 data/
 *.pyc
+__pycache__/*
