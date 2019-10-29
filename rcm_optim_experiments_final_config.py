@@ -14,7 +14,7 @@ experiment_set_dict = {
     'small': {
         'price_range': [1000],
         'num_prods': list(range(20, 100, 20)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            BINSEARCHIMPROVED_QIP_MTHREAD]
@@ -23,7 +23,7 @@ experiment_set_dict = {
     'medium': {
         'price_range': [1000],
         'num_prods': list(range(100, 500, 100)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'algorithm_list': [ADXOPT1_PRODUCTS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            BINSEARCHIMPROVED_QIP_MTHREAD]
@@ -32,13 +32,13 @@ experiment_set_dict = {
     'large': {
         'price_range': [1000],
         'num_prods': list(range(500, 2501, 500)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
                            BINSEARCH_QIP_MTHREAD_SPC, BINSEARCHIMPROVED_QIP_MTHREAD_SPC]
     },
     'synthetic_sets': {
         'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCH_QIP_EXACT]
@@ -46,7 +46,7 @@ experiment_set_dict = {
     'constrained_AO_small': {
         'price_range': [1000],
         'num_prods': list(range(20, 100, 20)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 5,
         'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
@@ -54,7 +54,7 @@ experiment_set_dict = {
     'constrained_AO_medium': {
         'price_range': [1000],
         'num_prods': list(range(100, 500, 100)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 20,
         'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
@@ -62,14 +62,14 @@ experiment_set_dict = {
     'constrained_AO_large': {
         'price_range': [1000],
         'num_prods': list(range(500, 2500, 500)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 20,
         'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_AO_synthetic_sets_small': {
         'num_prods': list(range(20, 100, 20)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
@@ -77,7 +77,7 @@ experiment_set_dict = {
     },
     'constrained_AO_synthetic_sets_medium': {
         'num_prods': list(range(100, 500, 100)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
@@ -86,7 +86,7 @@ experiment_set_dict = {
     'constrained_AO_synthetic_sets_large': {
         'price_range': [1000],
         'num_prods': list(range(500, 2500, 500)),
-        'repeat_count': 1,
+        'repeat_count': 2,
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',

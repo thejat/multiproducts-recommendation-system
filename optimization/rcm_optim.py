@@ -88,7 +88,7 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
     for i in range(1, len(price_sorted_products) + 1):
         rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         if rev_ro_set > maxRev:
-            maxRev, maxSet, maxIdx = rev_ro_set, price_sorted_products[:i], i + 1
+            maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
     timeTaken = time.time() - start_time
     if meta.get('print_results', False) is True:
         logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
