@@ -29,13 +29,13 @@ experiment_set_dict = {
                            BINSEARCHIMPROVED_QIP_MTHREAD]
     },
     # Large Experiments Config
-    # 'large': {
-    #     'price_range': [1000],
-    #     'num_prods': list(range(500, 2501, 500)),
-    #     'repeat_count': 1,
-    #     'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
-    #                        BINSEARCH_QIP_MTHREAD_SPC, BINSEARCHIMPROVED_QIP_MTHREAD_SPC]
-    # },
+    'large': {
+        'price_range': [1000],
+        'num_prods': list(range(500, 2501, 500)),
+        'repeat_count': 1,
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
+                           BINSEARCH_QIP_MTHREAD_SPC, BINSEARCHIMPROVED_QIP_MTHREAD_SPC]
+    },
     'synthetic_sets': {
         'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)),
         'repeat_count': 1,
