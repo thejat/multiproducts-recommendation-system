@@ -17,11 +17,10 @@ model_dir = rcm_model_dir
 solution_dir = rcm_solution_dir
 summary_dir = rcm_summary_dir
 experiment_id_list = sys.argv[1:]
-if experiment_id_list[0]=='all':
+if experiment_id_list[0] == 'all':
     experiment_id_list = list(experiment_set_dict.keys())
     logger.warning("Running on All configs provided in Examples...")
     logger.warning(f"Available Configs: {','.join(experiment_id_list)}")
-
 
 for experiment_id in experiment_id_list:
     num_prods = experiment_set_dict[experiment_id]['num_prods']
@@ -42,10 +41,12 @@ for experiment_id in experiment_id_list:
         prob_v0 = experiment_set_dict[experiment_id]['prob_v0']
     else:
         prob_v0 = None
+    prob_v0_model_creation = None
     if 'parent_model_file' in experiment_set_dict[experiment_id].keys():
-        dump_derived_rcm_models(parent_model_file, num_prods, repeat_count, dump_dir=model_dir, prob_v0=prob_v0)
+        dump_derived_rcm_models(parent_model_file, num_prods, repeat_count, dump_dir=model_dir,
+                                prob_v0=prob_v0_model_creation)
     else:
-        dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir, prob_v0=prob_v0)
+        dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir, prob_v0=prob_v0_model_creation)
 
     algorithm_list = experiment_set_dict[experiment_id]['algorithm_list']
     experiment_summary = run_rcm_experiments_v2(model_dir=model_dir,
@@ -55,7 +56,8 @@ for experiment_id in experiment_id_list:
                                                 parent_model_file=parent_model_file,
                                                 prod_count_list=num_prods,
                                                 repeat_count=repeat_count,
-                                                output_dir=solution_dir)
+                                                output_dir=solution_dir,
+                                                prob_v0=prob_v0)
 
     df_results = pd.DataFrame.from_dict(dict(enumerate(experiment_summary)), orient='index')
     df_results.to_csv(f"{summary_dir}/{experiment_id}_solution_summary.csv", index=False, sep='|')

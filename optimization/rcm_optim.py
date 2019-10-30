@@ -37,6 +37,7 @@ def init_optim_algorithms():
         'adxopt1': rcm_adxopt1_products,
         'adxopt2': rcm_adxopt2_sets,
         'revenue-ordered': rcm_revenue_ordered,
+        'mnl-revenue-ordered':mnl_revenue_ordered,
         'brute-force': rcm_brute_force_search
     }
 
@@ -48,7 +49,8 @@ def run_rcm_optimization(algorithm, num_prods, C, rcm_model, meta):
     maxRev, maxSet, timeTaken, solve_log = optim_function(num_prods, C, rcm_model, meta)
     if 'comparison_function' in meta.keys():
         logger.info(
-            f"Binary Search: {meta['comparison_function']},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{str(timeTaken)}")
+            f"Binary Search: {meta['comparison_function']},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken: "
+            f"{str(timeTaken)}")
     else:
         logger.info(f"Algorithm: {algorithm},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{str(timeTaken)}")
     return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken, 'solve_log': str(solve_log)}
@@ -75,6 +77,31 @@ def init_comparision_methods():
         'qip-approx': binSearchCompare_qip_approx_multithread,
         'ip-exact': binSearchCompare_ip_exact
     }
+
+
+# ====================MNL Revenue Ordered Assortments ====================================
+def mnl_revenue_ordered(num_prods, C, rcm, meta):
+    improved_lower_bound = 0
+    price_list = rcm['p'][1:]
+    start_time = time.time()
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    maxRev, maxSet = 0, []
+    maxIdx = -1
+    for i in range(1, len(price_sorted_products) + 1):
+        rev_ro_set = mnl_calc_revenue(price_sorted_products[:i], rcm['p'], rcm['v'])
+        if rev_ro_set > maxRev:
+            maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
+    timeTaken = time.time() - start_time
+    if meta.get('print_results', False) is True:
+        logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
+    solve_log = {'max_idx': maxIdx}
+    return maxRev, maxSet, timeTaken, solve_log
+
+
+def mnl_calc_revenue(product_list, p, v):
+    num = np.sum([p[prod] * v[prod] for prod in product_list])
+    den = np.sum([v[0]] + [v[prod] for prod in product_list])
+    return num / den
 
 
 # ====================RCM Revenue Ordered Assortments ====================================

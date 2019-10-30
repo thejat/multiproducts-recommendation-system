@@ -117,13 +117,20 @@ ADXOPT2_SETS = {
 }
 
 """
-Revenue Ordered Assortment, End When A(l)>A(l+1)
+Revenue Ordered Assortment
 """
 REVENUE_ORDERED = {
     'solution_id': 'revenue_ordered',
     'algo': 'revenue-ordered'
 }
 
+"""
+Revenue Ordered Assortment MNL Style
+"""
+MNL_REVENUE_ORDERED = {
+    'solution_id': 'mnl_revenue_ordered',
+    'algo': 'mnl-revenue-ordered'
+}
 
 
 

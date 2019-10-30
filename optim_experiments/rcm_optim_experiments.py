@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_list, parent_model_file,
                            prod_count_list, repeat_count,
-                           output_dir='tmp/solutions/rcm_models/v2'):
+                           output_dir='tmp/solutions/rcm_models/v2', prob_v0 = None):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     experiment_summary = []
@@ -34,6 +34,11 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                 with open(model_filepath, 'rb') as f:
                     model_dict = pickle.load(f)
                 rcm_model = model_dict['rcm_model']
+                if prob_v0 is not None:
+                    logger.info(f"Prob v0 is {prob_v0} not None, Updating current RCM Model...")
+                    v_sum = sum(rcm_model['v']) + sum(rcm_model['v2'].values()) - rcm_model['v'][0]
+                    rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
+                    meta_default['prob_v0'] = prob_v0
                 for optim_algo_dict in algorithm_list:
                     try:
                         meta = deepcopy(meta_default)
@@ -43,8 +48,13 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 index_filepath = \
                                     f'{model_dir}/nn_index_cache/rcm_nn_index_{price_range}_{num_prods}_{repeat_id}.pkl'
                                 meta.update({'index_filepath': index_filepath})
-                        model_solve_filepath = \
-                            f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}.pkl'
+
+                        if prob_v0 is None:
+                            model_solve_filepath = \
+                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}.pkl'
+                        else:
+                            model_solve_filepath = \
+                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}_v0_{int(prob_v0*100)}.pkl'
                         if not os.path.exists(model_solve_filepath):
                             sol_dict = {key: model_dict[key] for key in model_dict.keys() if not (key == 'rcm_model')}
                             sol_dict.update(meta)
