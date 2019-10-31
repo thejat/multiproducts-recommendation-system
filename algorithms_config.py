@@ -7,7 +7,7 @@ Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heu
 and subpartitioning problem using spectral clustering
 """
 BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
-    'solution_id': 'binSearch_qip_approx_multithread_spc',
+    'solution_id': 'binSearchImproved_qip_approx_multithread_spc',
     'algo': 'binary-search-improved',
     'clusters_allowed': True,
     'comparison_function': 'qip-approx-spc',
