@@ -27,6 +27,7 @@ BINSEARCH_QIP_MTHREAD_SPC = {
     'solution_id': 'binSearch_qip_approx_multithread_spc',
     'algo': 'binary-search',
     'clusters_allowed': True,
+    'max_problem_size': 1000,
     'comparison_function': 'qip-approx-spc',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
@@ -90,8 +91,6 @@ BINSEARCH_QIP_EXACT = {
     'comparison_function': 'qip-exact'
 }
 
-
-
 """
 Solving Exact Formulation for Mixed Integer Programming
 """
@@ -131,10 +130,6 @@ MNL_REVENUE_ORDERED = {
     'solution_id': 'mnl_revenue_ordered',
     'algo': 'mnl-revenue-ordered'
 }
-
-
-
-
 
 """
 Binary Search with MIPS Formulation using KNN for Comparision Step

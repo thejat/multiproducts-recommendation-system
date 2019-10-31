@@ -686,7 +686,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
 
     start_time = time.time()
     heuristic_list = meta['heuristic_list']
-    time_limit = meta['time_multiplier'] * num_prods
+    time_limit = meta['time_multiplier'] * new_product_count
     threadlist = []
     mutex = Lock()
     repeat_counter = 0
