@@ -11,6 +11,12 @@ rcm_summary_dir = 'results/final_paper/rcm'
 
 experiment_set_dict = {
     # Small Experiments Config
+    'debug_large': {
+        'price_range': [1000],
+        'num_prods': [2000],
+        'repeat_count': 1,
+        'algorithm_list': [REVENUE_ORDERED]
+    },
     'small': {
         'price_range': [1000],
         'num_prods': list(range(20, 100, 20)),
@@ -133,14 +139,15 @@ experiment_set_dict = {
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+    },
+    'mnl_revenue_ordered_uci': {
+        'price_range': [1000],
+        'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)) + list(range(500, 2500, 500)),
+        'repeat_count': 1,
+        'prob_v0': None,
+        'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
+        'algorithm_list': [MNL_REVENUE_ORDERED]
     }
-    # 'mnl_revenue_ordered': {
-    #     'price_range': [1000],
-    #     'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)) + list(range(500, 2500, 500)),
-    #     'repeat_count': 1,
-    #     'prob_v0': None,
-    #     'algorithm_list': [MNL_REVENUE_ORDERED, BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD]
-    # }
 }
 
 v0_levels = range(10, 100, 20)

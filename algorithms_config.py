@@ -10,6 +10,7 @@ BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
     'solution_id': 'binSearchImproved_qip_approx_multithread_spc',
     'algo': 'binary-search-improved',
     'clusters_allowed': True,
+    'max_problem_size': 1000,
     'comparison_function': 'qip-approx-spc',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
@@ -134,17 +135,17 @@ MNL_REVENUE_ORDERED = {
 """
 Binary Search with MIPS Formulation using KNN for Comparision Step
 """
-BINSEARCH_NN_EXACT = {
-    'solution_id': 'binSearch_nn-exact',
-    'algo': 'binary-search',
-    'comparison_function': 'nn-exact'
-}
+# BINSEARCH_NN_EXACT = {
+#     'solution_id': 'binSearch_nn-exact',
+#     'algo': 'binary-search',
+#     'comparison_function': 'nn-exact'
+# }
 
 """
 Binary Search with MIPS Formulation using LSH for Comparision Step
 """
-BINSEARCH_NN_APPROX = {
-    'solution_id': 'binSearch_nn-approx',
-    'algo': 'binary-search',
-    'comparison_function': 'nn-approx'
-}
+# BINSEARCH_NN_APPROX = {
+#     'solution_id': 'binSearch_nn-approx',
+#     'algo': 'binary-search',
+#     'comparison_function': 'nn-approx'
+# }

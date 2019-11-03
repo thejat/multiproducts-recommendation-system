@@ -1,6 +1,6 @@
 import numpy as np
 import random
-
+from collections.abc import Iterable
 
 def set_char_from_ast(ast, prod):
     set_char_vector = [0] * prod
@@ -10,6 +10,8 @@ def set_char_from_ast(ast, prod):
 
     if isinstance(ast, (int, np.integer)):
         set_char_vector[ast - 1] = 1
+    elif isinstance(ast, (np.float, float)):
+        set_char_vector[int(ast) - 1] = 1
     else:
         for x in ast:
             set_char_vector[x - 1] = 1

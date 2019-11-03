@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from itertools import combinations
 from itertools import chain
-from sklearn.neighbors import LSHForest
+# from sklearn.neighbors import LSHForest
 from sklearn.neighbors import NearestNeighbors
 from synthetic_models.utils import set_char_from_ast, ast_from_set_char
 import cplex
@@ -112,6 +112,9 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
     maxRev, maxSet = 0, []
     maxIdx = -1
+    revs, times = [], []
+
+    new_revs, new_times = [], []
     for i in range(1, len(price_sorted_products) + 1):
         rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         if rev_ro_set > maxRev:
@@ -833,7 +836,7 @@ def compare_nn_preprocess(num_prods, C, p, algo, nEst=10, nCand=4):
     t0 = time.time()
 
     if algo == 'nn-approx':
-        db = LSHForest(n_estimators=nEst, n_candidates=nCand, n_neighbors=1, min_hash_match=2)
+        db = NearestNeighbors(n_estimators=nEst, n_candidates=nCand, n_neighbors=1, min_hash_match=2)
     elif algo == 'nn-exact':
         db = NearestNeighbors(n_neighbors=1, metric='cosine', algorithm='brute')
     else:
@@ -1224,7 +1227,7 @@ def rcm_get_assortment_probs(given_set, rcm, num_prods):
     return probs, normalization_temp
 
 
-def rcm_calc_revenue(given_set, p, rcm, num_prods):
+def rcm_calc_revenue_old(given_set, p, rcm, num_prods):
     probs, _ = rcm_get_assortment_probs(given_set, rcm, num_prods)
     rev = 0
     for set_char_vector in probs:
@@ -1234,3 +1237,18 @@ def rcm_calc_revenue(given_set, p, rcm, num_prods):
                 subset_price += p[i + 1]
         rev = rev + subset_price * probs[set_char_vector]
     return rev
+
+
+def rcm_calc_revenue(given_set, p, rcm, num_prods):
+    if len(given_set) <= 0:
+        return 0
+    else:
+        den0 = rcm['v'][0]
+        num1 = np.sum([rcm['p'][xr] * rcm['v'][xr] for xr in given_set])
+        den1 = np.sum([rcm['v'][xr] for xr in given_set])
+        num2 = np.sum(
+            [(rcm['p'][given_set[xi]] + rcm['p'][given_set[xj]]) * (rcm['v2'][tuple([given_set[xi], given_set[xj]])])
+             for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
+        den2 = np.sum([(rcm['v2'][tuple([given_set[xi], given_set[xj]])])
+                       for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
+        return (num1 + num2) / (den0 + den1 + den2)
