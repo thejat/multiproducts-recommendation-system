@@ -101,6 +101,7 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
     solve_log = {'max_idx': maxIdx}
     return maxRev, maxSet, timeTaken, solve_log
 
+
 #
 # def mnl_calc_revenue(product_list, p, v):
 #     num = np.sum([p[prod] * v[prod] for prod in product_list])
@@ -116,10 +117,18 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
     maxRev, maxSet = 0, []
     maxIdx = -1
-    revs, times = [], []
-
-    new_revs, new_times = [], []
+    den0, den1, den2 = rcm['v'][0], 0, 0
+    num1, num2 = 0, 0
     for i in range(1, len(price_sorted_products) + 1):
+        # rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        curr_prod = price_sorted_products[i - 1]
+        num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
+        num2 += sum(
+            [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
+                rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+        den1 += rcm['v'][curr_prod]
+        den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+        # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
         rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1

@@ -13,7 +13,7 @@ experiment_set_dict = {
     # Small Experiments Config
     'debug_large': {
         'price_range': [1000],
-        'num_prods': [2000],
+        'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)) + list(range(500, 2500, 500)),
         'repeat_count': 1,
         'algorithm_list': [REVENUE_ORDERED]
     },
