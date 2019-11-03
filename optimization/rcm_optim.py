@@ -37,7 +37,7 @@ def init_optim_algorithms():
         'adxopt1': rcm_adxopt1_products,
         'adxopt2': rcm_adxopt2_sets,
         'revenue-ordered': rcm_revenue_ordered,
-        'mnl-revenue-ordered':mnl_revenue_ordered,
+        'mnl-revenue-ordered': mnl_revenue_ordered,
         'brute-force': rcm_brute_force_search
     }
 
@@ -87,8 +87,12 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
     maxRev, maxSet = 0, []
     maxIdx = -1
+    numerator_i, denominator_i = 0., rcm['v'][0]
     for i in range(1, len(price_sorted_products) + 1):
-        rev_ro_set = mnl_calc_revenue(price_sorted_products[:i], rcm['p'], rcm['v'])
+        # rev_ro_set = mnl_calc_revenue(price_sorted_products[:i], rcm['p'], rcm['v'])
+        numerator_i += rcm['p'][price_sorted_products[i - 1]] * rcm['v'][price_sorted_products[i - 1]]
+        denominator_i += rcm['v'][price_sorted_products[i - 1]]
+        rev_ro_set = numerator_i / denominator_i
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
     timeTaken = time.time() - start_time
@@ -97,11 +101,11 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
     solve_log = {'max_idx': maxIdx}
     return maxRev, maxSet, timeTaken, solve_log
 
-
-def mnl_calc_revenue(product_list, p, v):
-    num = np.sum([p[prod] * v[prod] for prod in product_list])
-    den = np.sum([v[0]] + [v[prod] for prod in product_list])
-    return num / den
+#
+# def mnl_calc_revenue(product_list, p, v):
+#     num = np.sum([p[prod] * v[prod] for prod in product_list])
+#     den = np.sum([v[0]] + [v[prod] for prod in product_list])
+#     return num / den
 
 
 # ====================RCM Revenue Ordered Assortments ====================================
@@ -544,7 +548,8 @@ def cluster_optim_qip_run_python_subroutine(cluster_id, Q_mat_cluster, Q_mat_lab
                                             maxRevMap, mutex_cluster):
     num_variables_cluster_id = Q_mat_cluster.shape[0]
     cluster_input_filename = f"{'/'.join(input_filename.split('/')[:-1])}/{cluster_id}_{input_filename.split('/')[-1]}"
-    cluster_output_filename = f"{'/'.join(output_filename.split('/')[:-1])}/{cluster_id}_{output_filename.split('/')[-1]}"
+    cluster_output_filename = \
+        f"{'/'.join(output_filename.split('/')[:-1])}/{cluster_id}_{output_filename.split('/')[-1]}"
     with open(cluster_input_filename, 'w') as f:
         f.write(
             f'{num_variables_cluster_id} {int(num_variables_cluster_id * (num_variables_cluster_id + 1) / 2)}\n')

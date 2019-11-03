@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_list, parent_model_file,
                            prod_count_list, repeat_count,
-                           output_dir='tmp/solutions/rcm_models/v2', prob_v0 = None):
+                           output_dir='tmp/solutions/rcm_models/v2', prob_v0=None):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     experiment_summary = []
@@ -54,7 +54,7 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}.pkl'
                         else:
                             model_solve_filepath = \
-                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}_v0_{int(prob_v0*100)}.pkl'
+                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}_v0_{int(prob_v0 * 100)}.pkl'
                         if not os.path.exists(model_solve_filepath):
                             sol_dict = {key: model_dict[key] for key in model_dict.keys() if not (key == 'rcm_model')}
                             sol_dict.update(meta)
@@ -102,7 +102,8 @@ def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='t
     return None
 
 
-def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_dir='tmp/rcm_models/v2/', prob_v0=None):
+def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_dir='tmp/rcm_models/v2/', prob_v0=None,
+                            is_mnl=False):
     # Check If Dump Dir Exists
     if not os.path.exists(dump_dir):
         os.makedirs(dump_dir)
@@ -117,7 +118,15 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
             if not os.path.exists(f'{dump_dir}/{dump_filename}'):
                 model_dict = {'parent_model': parent_modelname, 'num_prod': num_prod, 'repeat_id': i,
                               'time_of_creation': time_now}
-                rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0)
+                if is_mnl:
+                    rcm_filename = f'rcm_model_{parent_modelname.split("_mnl")[0]}_{num_prod}_{i}.pkl'
+                    rcm_filepath = f'{dump_dir}/{rcm_filename}'
+                    mnl_v0, selected_products = get_selected_rcm_model_products(rcm_filepath)
+                    rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0,
+                                                                  is_mnl=is_mnl, selected_products=selected_products,
+                                                                  mnl_v0=mnl_v0)
+                else:
+                    rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0)
                 model_dict.update({'rcm_model': rcm_model})
                 # dump_filename = f'rcm_model_{parent_modelname}_{num_prod}_{i}.pkl'
                 with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
@@ -127,6 +136,13 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
 
     return None
 
+def get_selected_rcm_model_products(rcm_filepath):
+    if os.path.exists(rcm_filepath):
+        model_dict = pickle.load(open(rcm_filepath,'rb'))
+        return model_dict['rcm_model']['v'][0], model_dict['rcm_model']['product_ids']
+    else:
+        logger.error(f"Corresponding RCM Model {rcm_filepath} is not available, Selected Products Set to None...")
+        return None
 
 def cache_nn_index_mthread(price_range_list, prod_count_list, repeat_count, model_dir='tmp/rcm_models/v2/',
                            num_threads=10):

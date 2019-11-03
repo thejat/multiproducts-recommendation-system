@@ -146,6 +146,16 @@ experiment_set_dict = {
         'repeat_count': 1,
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
+        'is_mnl_model': True,
+        'algorithm_list': [MNL_REVENUE_ORDERED]
+    },
+    'mnl_revenue_ordered_tafeng': {
+        'price_range': [1000],
+        'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)) + list(range(500, 2500, 500)),
+        'repeat_count': 1,
+        'prob_v0': None,
+        'parent_model_file': 'synthetic_models/models/tafeng_mnl.pkl',
+        'is_mnl_model': True,
         'algorithm_list': [MNL_REVENUE_ORDERED]
     }
 }
