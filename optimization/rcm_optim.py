@@ -111,7 +111,6 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
 
 # ====================RCM Revenue Ordered Assortments ====================================
 def rcm_revenue_ordered(num_prods, C, rcm, meta):
-    improved_lower_bound = 0
     price_list = rcm['p'][1:]
     start_time = time.time()
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
@@ -174,7 +173,7 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     logger.debug(f"Improved Global Lower Bound For Binary Search : {L}")
     solve_log['global_lower_bound'] = L
     U = 2 * max(p)  # U is the upper bound on the objective
-    iter_count = 1
+    iter_count = 0
     logger.debug(f"Starting Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
     while (U - L) > meta['eps']:
         count += 1
@@ -183,13 +182,13 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         selected_products = binSearchImproved_selected_products(num_prods, C, rcm, meta, K)
         logger.debug(f"Iteration: {iter_count}; U,L:"
                      f" {U},{L}; #products removed:{len(removed_products)},selected: {len(selected_products)}")
-        iter_count += 1
         meta['selected_products'] = selected_products
         meta['removed_products'] = removed_products
         if (len(selected_products + removed_products) >= num_prods):
             maxSet = selected_products
             break
         maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
+        iter_count += 1
         solve_time += queryTimeLog
         # logger.info('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
         # Add Selected products in mix
@@ -343,7 +342,7 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         solve_log[f'iter_{iter_count}'] = {
             'U': U,
             'L': L,
-            'Time Taken': solve_time
+            'comp_step_time': queryTimeLog
         }
         if (maxPseudoRev / rcm['v'][0]) >= K:
             L = K
