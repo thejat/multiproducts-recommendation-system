@@ -365,23 +365,48 @@ def rcm_binary_search(num_prods, C, rcm, meta):
 def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     '''
         QUBO integer programming comparison
+        We will use the cplex 12.9 python api and also generate constraints using the column based technique
     '''
+
     p = cplex.Cplex()
     p.objective.set_sense(p.objective.sense.maximize)
 
+
+    #potentially have a constraint on the assortment size
+    max_assortment_size = num_prods
     if 'max_assortment_size' in meta.keys():
         max_assortment_size = meta['max_assortment_size']
-        if max_assortment_size is not None:
-            p.linear_constraints.add(rhs=[max_assortment_size], senses="L")
-        else:
-            p.linear_constraints.add(rhs=[num_prods], senses="L")
+        
+    #apply improvements along with max_assortment_size
+    if 'is_improved_qubo' in meta.keys():
+        selected_products = sorted(meta['selected_products']) #assumed 1 indexing
+        removed_products = sorted(meta['removed_products'])   #assumed 1 indexing
+        rhs_values = [max_assortment_size]+[1]*len(selected_products)+[0]*len(removed_products)
+        sense_values = ['L']+['E']*(len(selected_products)+len(removed_products))
+        p.linear_constraints.add(rhs=rhs_values, senses=sense_values)
+        
+        cols = []
+        k = 1
+        for i in range(1,num_prods+1):
+            if i in selected_products or i in removed_products:
+                cols.append([[0,k],[1.0,1.0]])
+                k += 1
+            else:
+                cols.append([[0],[1.0]])
+        assert (k==1+len(selected_products)+len(selected_products)),'Issue with number of rows and selected and removed products'
+        
     else:
-        p.linear_constraints.add(rhs=[num_prods], senses="L")
-
+        p.linear_constraints.add(rhs=[max_assortment_size], senses="L")
+        cols = [[[0], [1.0]] for i in range(num_prods)]
+        '''
+        Here each row of the cols list represents a two element list.
+        the first element is a list of rows/constraint indices where the variable appears
+        the second element is the coefficient of this variable in that row/constraint
+        '''
+         
     obj = np.multiply(np.array(rcm['v'][1:]), np.array(rcm['p'][1:])) - K * np.array(rcm['v'][1:])
     obj = obj.tolist()
     ub = [1 for i in range(num_prods)]
-    cols = [[[0], [1.0]] for i in range(num_prods)]
     types = ''.join(['I' for i in range(num_prods)])
 
     p.variables.add(obj=obj, ub=ub, columns=cols, types=types,
@@ -398,14 +423,16 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         qmat.append(temprow)
     p.objective.set_quadratic(qmat)
 
-    # p.write("qip.lp")
-    # logger.info(qmat)
-    # logger.info(types)
-    # logger.info(p.variables.get_lower_bounds())
-    # logger.info(p.variables.get_upper_bounds())
-    # logger.info(p.variables.get_names())
-    # logger.info(p.linear_constraints.get_num())
-    # logger.info(p.variables.get_num())
+    # temporarily enabling the following 8 lines
+    p.write("qip.lp")
+    logger.info(qmat)
+    logger.info(types)
+    logger.info(p.variables.get_lower_bounds())
+    logger.info(p.variables.get_upper_bounds())
+    logger.info(p.variables.get_names())
+    logger.info(p.linear_constraints.get_num())
+    logger.info(p.variables.get_num())
+
 
     p.set_log_stream(None)
     p.set_error_stream(None)
