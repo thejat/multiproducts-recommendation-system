@@ -386,14 +386,17 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         p.linear_constraints.add(rhs=rhs_values, senses=sense_values)
         
         cols = []
-        k = 1
+        ks,kr= 1,len(selected_products)+1
         for i in range(1,num_prods+1):
-            if i in selected_products or i in removed_products:
-                cols.append([[0,k],[1.0,1.0]])
-                k += 1
+            if i in selected_products:
+                cols.append([[0,ks],[1.0,1.0]])
+                ks += 1
+            elif i in removed_products:
+                cols.append([[kr],[1.0]])
+                kr += 1
             else:
                 cols.append([[0],[1.0]])
-        assert (k==1+len(selected_products)+len(selected_products)),'Issue with number of rows and selected and removed products'
+        assert (kr==1+len(selected_products)+len(selected_products)),'Issue with number of rows and selected and removed products'
         
     else:
         p.linear_constraints.add(rhs=[max_assortment_size], senses="L")
@@ -424,14 +427,14 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     p.objective.set_quadratic(qmat)
 
     # temporarily enabling the following 8 lines
-    p.write("qip.lp")
-    logger.info(qmat)
-    logger.info(types)
-    logger.info(p.variables.get_lower_bounds())
-    logger.info(p.variables.get_upper_bounds())
-    logger.info(p.variables.get_names())
-    logger.info(p.linear_constraints.get_num())
-    logger.info(p.variables.get_num())
+    #p.write("qip.lp")
+    #logger.info(qmat)
+    #logger.info(types)
+    #logger.info(p.variables.get_lower_bounds())
+    #logger.info(p.variables.get_upper_bounds())
+    #logger.info(p.variables.get_names())
+    #logger.info(p.linear_constraints.get_num())
+    #logger.info(p.variables.get_num())
 
 
     p.set_log_stream(None)
