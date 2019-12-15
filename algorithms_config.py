@@ -91,6 +91,15 @@ BINSEARCH_QIP_EXACT = {
     'algo': 'binary-search',
     'comparison_function': 'qip-exact'
 }
+"""
+Binary Search Improved version with Solving a Quadratic Integer Programming using cplex module
+"""
+BINSEARCHIMPROVED_QIP_EXACT = {
+    'solution_id': 'binSearchImproved_qip_exact',
+    'algo': 'binary-search-improved',
+    'is_improved_qip': True,
+    'comparison_function': 'qip-exact'
+}
 
 """
 Solving Exact Formulation for Mixed Integer Programming

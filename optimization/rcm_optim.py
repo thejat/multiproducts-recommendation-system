@@ -378,7 +378,7 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         max_assortment_size = meta['max_assortment_size']
         
     #apply improvements along with max_assortment_size
-    if 'is_improved_qubo' in meta.keys():
+    if 'is_improved_qip' in meta.keys():
         selected_products = sorted(meta['selected_products']) #assumed 1 indexing
         removed_products = sorted(meta['removed_products'])   #assumed 1 indexing
         rhs_values = [max_assortment_size]+[1]*len(selected_products)+[0]*len(removed_products)

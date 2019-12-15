@@ -12,11 +12,11 @@ RC = 20
 
 experiment_set_dict = {
     # Small Experiments Config
-    'debug_large': {
+    'medium_qip_improved_test': {
         'price_range': [1000],
-        'num_prods': list(range(20, 100, 20)) + list(range(100, 500, 100)) + list(range(500, 2500, 500)),
+        'num_prods': list(range(100, 500, 100)),
         'repeat_count': RC,
-        'algorithm_list': [REVENUE_ORDERED]
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'small': {
         'price_range': [1000],
