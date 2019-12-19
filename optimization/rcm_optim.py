@@ -192,7 +192,7 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         solve_time += queryTimeLog
         # logger.info('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
         # Add Selected products in mix
-        maxSet = maxSet + meta['selected_products']
+        maxSet = list(set(maxSet + meta['selected_products']))
         maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
         logger.debug({f"K:{K}, MaxRev: {maxRev}, Time Taken: {queryTimeLog}"})
         logger.debug({f"MaxSet: {maxSet}"})
