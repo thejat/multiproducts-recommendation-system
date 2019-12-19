@@ -396,7 +396,12 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
                 kr += 1
             else:
                 cols.append([[0],[1.0]])
-        assert (kr==1+len(selected_products)+len(selected_products)),'Issue with number of rows and selected and removed products'
+        #print(kr)
+        #print(1+len(selected_products)+len(removed_products))
+        #print(cols)
+        #print(rhs_values)
+        #print(sense_values)
+        assert (kr==1+len(selected_products)+len(removed_products)),'Issue with number of rows and selected and removed products'
         
     else:
         p.linear_constraints.add(rhs=[max_assortment_size], senses="L")
@@ -411,9 +416,13 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     obj = obj.tolist()
     ub = [1 for i in range(num_prods)]
     types = ''.join(['I' for i in range(num_prods)])
+    names = ["x_" + str(i + 1) for i in range(num_prods)]
+    #print(obj)
+    #print(ub)
+    #print(types)
+    #print(names)
 
-    p.variables.add(obj=obj, ub=ub, columns=cols, types=types,
-                    names=["x_" + str(i + 1) for i in range(num_prods)])
+    p.variables.add(obj=obj, ub=ub, columns=cols, types=types,names=names)
 
     qmat = []
     for idxi in range(num_prods):

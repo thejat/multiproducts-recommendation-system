@@ -8,7 +8,7 @@ basic_keys = ['price_range', 'num_prods', 'repeat_count', 'algorithm_list']
 rcm_model_dir = f'results/final_paper/rcm/models'
 rcm_solution_dir = 'results/final_paper/rcm/solutions'
 rcm_summary_dir = 'results/final_paper/rcm'
-RC = 20
+RC = 2
 
 experiment_set_dict = {
     # Small Experiments Config
@@ -24,7 +24,7 @@ experiment_set_dict = {
         'repeat_count': RC,
         'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     # Medium Experiments Config
     'medium': {
@@ -33,15 +33,15 @@ experiment_set_dict = {
         'repeat_count': RC,
         'algorithm_list': [ADXOPT1_PRODUCTS,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     # Large Experiments Config
     'large': {
         'price_range': [1000],
         'num_prods': list(range(500, 2501, 500)),
         'repeat_count': RC,
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
+                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'tafeng_small': {
         'num_prods': list(range(20, 100, 20)),
@@ -50,7 +50,7 @@ experiment_set_dict = {
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'tafeng_medium': {
         'num_prods': list(range(100, 500, 100)),
@@ -59,14 +59,15 @@ experiment_set_dict = {
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'algorithm_list': [ADXOPT1_PRODUCTS,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'tafeng_large': {
         'num_prods': list(range(500, 2501, 500)),
         'repeat_count': RC,
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
+                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'uci_small': {
         'num_prods': list(range(20, 100, 20)),
@@ -75,7 +76,7 @@ experiment_set_dict = {
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'uci_medium': {
         'num_prods': list(range(100, 500, 100)),
@@ -84,14 +85,15 @@ experiment_set_dict = {
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [ADXOPT1_PRODUCTS,
                            BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+                           BINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'uci_large': {
         'num_prods': list(range(500, 2501, 500)),
         'repeat_count': RC,
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
+                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
     },
     'constrained_small': {
         'price_range': [1000],
@@ -99,7 +101,7 @@ experiment_set_dict = {
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 5,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
     },
     'constrained_medium_large': {
         'price_range': [1000],
@@ -107,7 +109,7 @@ experiment_set_dict = {
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
     },
     'constrained_tafeng_small': {
         'num_prods': list(range(20, 100, 20)),
@@ -115,7 +117,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
     },
     'constrained_tafeng_medium_large': {
         'num_prods': list(range(100, 500, 100)) + list(range(500, 2500, 500)),
@@ -123,7 +125,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
     },
     'constrained_uci_small': {
         'num_prods': list(range(20, 100, 20)),
@@ -131,7 +133,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
     },
     'constrained_uci_medium_large': {
         'num_prods': list(range(100, 500, 100)) + list(range(500, 2500, 500)),
@@ -139,7 +141,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
     },
     'mnl_revenue_ordered_uci': {
         'price_range': [1000],
