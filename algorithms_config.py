@@ -92,6 +92,14 @@ BINSEARCH_QIP_EXACT = {
     'comparison_function': 'qip-exact'
 }
 """
+Binary Search with Solving a Quadratic Integer Programming using cplex module with Capacity constraint
+"""
+BINSEARCH_QIP_EXACT_CONSTRAINED = {
+    'solution_id': 'binSearch_qip_exact_constrained',
+    'algo': 'binary-search',
+    'comparison_function': 'qip-exact'
+}
+"""
 Binary Search Improved version with Solving a Quadratic Integer Programming using cplex module
 """
 BINSEARCHIMPROVED_QIP_EXACT = {
@@ -110,10 +118,26 @@ MIXED_IP = {
 }
 
 """
+Solving Exact Formulation for Mixed Integer Programming with capacity constraint
+"""
+MIXED_IP_CONSTRAINED = {
+    'solution_id': 'mixed_ip_constrained',
+    'algo': 'mixed-ip'
+}
+
+"""
 ADXOPT with using 1 product for exchange/remove/add
 """
 ADXOPT1_PRODUCTS = {
     'solution_id': 'adxopt_products',
+    'algo': 'adxopt1'
+}
+
+"""
+ADXOPT with using 1 product for exchange/remove/add with capacity constraint
+"""
+ADXOPT1_PRODUCTS_CONSTRAINED = {
+    'solution_id': 'adxopt_products_constrained',
     'algo': 'adxopt1'
 }
 
@@ -126,10 +150,26 @@ ADXOPT2_SETS = {
 }
 
 """
+ADXOPT with using 2 product sets for exchange/remove/add with capcity constraint
+"""
+ADXOPT2_SETS_CONSTRAINED = {
+    'solution_id': 'adxopt_sets_constrained',
+    'algo': 'adxopt2'
+}
+
+"""
 Revenue Ordered Assortment
 """
 REVENUE_ORDERED = {
     'solution_id': 'revenue_ordered',
+    'algo': 'revenue-ordered'
+}
+
+"""
+Revenue Ordered Assortment with capacity constraint
+"""
+REVENUE_ORDERED_CONSTRAINED = {
+    'solution_id': 'revenue_ordered_constrained',
     'algo': 'revenue-ordered'
 }
 

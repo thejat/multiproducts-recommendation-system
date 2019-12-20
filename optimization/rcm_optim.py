@@ -111,6 +111,12 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
 
 # ====================RCM Revenue Ordered Assortments ====================================
 def rcm_revenue_ordered(num_prods, C, rcm, meta):
+
+    #potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
     price_list = rcm['p'][1:]
     start_time = time.time()
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
@@ -118,7 +124,7 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
     maxIdx = -1
     den0, den1, den2 = rcm['v'][0], 0, 0
     num1, num2 = 0, 0
-    for i in range(1, len(price_sorted_products) + 1):
+    for i in range(1, min(C+1,len(price_sorted_products) + 1)):
         # rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         curr_prod = price_sorted_products[i - 1]
         num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
@@ -940,6 +946,12 @@ def rcm_brute_force_search(num_prods, C, rcm, meta=None, K=None):
 # ====================RCM ADXOPT1 with products===================
 
 def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
+
+    #potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
     p = rcm['p']
     st = time.time()
     # initialize
@@ -1035,6 +1047,12 @@ def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
 # ====================RCM ADXOPT2 with subsets===================
 # This function considers addition of subsets of size 2 in addition to individual items
 def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_exchange=True):
+
+    #potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
     p = rcm['p']
     st = time.time()
     # initialize
@@ -1162,6 +1180,12 @@ def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_
 # ====================RCM Mixed Integer program ===================
 
 def rcm_mixed_ip(num_prods, C, rcm, meta=None):
+
+    #potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
     opt_model = cpx.Model(name="rcm Model")
     # Declare Variables
     p_vars = \
@@ -1175,6 +1199,9 @@ def rcm_mixed_ip(num_prods, C, rcm, meta=None):
          range(i, num_prods + 1)}
 
     # Add Constraints to Model
+    constraintCapacity = {1: opt_model.add_constraint(
+        opt_model.sum( x_vars[i, i] for i in range(1, num_prods + 1)) <= C, ctname=f"constraintCapacity")}
+
     constraintsA = {(i, j): opt_model.add_constraint(
         ct=p_vars[i, j] <= x_vars[i, j], ctname=f"constraint_p_{i}{j}<x{i}{j}") for i in range(1, num_prods + 1) for j
         in

@@ -8,7 +8,7 @@ basic_keys = ['price_range', 'num_prods', 'repeat_count', 'algorithm_list']
 rcm_model_dir = f'results/final_paper/rcm/models'
 rcm_solution_dir = 'results/final_paper/rcm/solutions'
 rcm_summary_dir = 'results/final_paper/rcm'
-RC = 2
+RC = 50
 small_lb = 20
 small_ub = 100 #excludes ub
 small_delta = 20
@@ -24,12 +24,19 @@ large_array = list(range(large_lb,large_ub,large_delta))
 
 experiment_set_dict = {
     # Small Experiments Config
-    'medium_qip_improved_test': {
-        'price_range': [1000],
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
-    },
+    #'medium_qip_improved_test': {
+    #    'price_range': [1000],
+    #    'num_prods': medium_array,
+    #    'repeat_count': RC,
+    #    'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
+    #},
+   # 'constrained_medium_qip_test': {
+   #     'price_range': [1000],
+   #     'num_prods': medium_array,
+   #     'repeat_count': 1,
+   #     'max_assortment_size': 20,
+   #     'algorithm_list': [BINSEARCH_QIP_EXACT]
+   # },
     'small': {
         'price_range': [1000],
         'num_prods': small_array,
@@ -53,7 +60,7 @@ experiment_set_dict = {
         'num_prods': large_array,
         'repeat_count': RC,
         'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
-                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
+                           BINSEARCHIMPROVED_QIP_EXACT]
     },
     'tafeng_small': {
         'num_prods': small_array,
@@ -79,7 +86,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
-                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
+                            BINSEARCHIMPROVED_QIP_EXACT]
     },
     'uci_small': {
         'num_prods': small_array,
@@ -105,7 +112,7 @@ experiment_set_dict = {
         'prob_v0': None,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD,
-                           BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
+                            BINSEARCHIMPROVED_QIP_EXACT]
     },
     'constrained_small': {
         'price_range': [1000],
@@ -113,15 +120,24 @@ experiment_set_dict = {
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 5,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED, REVENUE_ORDERED_CONSTRAINED,
+                            BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_medium_large': {
+    'constrained_medium': {
         'price_range': [1000],
-        'num_prods': medium_array + large_array,
+        'num_prods': medium_array,
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+    },
+    'constrained_large': {
+        'price_range': [1000],
+        'num_prods': large_array,
+        'repeat_count': RC,
+        'prob_v0': None,
+        'max_assortment_size': 20,
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_tafeng_small': {
         'num_prods': small_array,
@@ -129,15 +145,24 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED, REVENUE_ORDERED_CONSTRAINED,
+                            BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_tafeng_medium_large': {
-        'num_prods': medium_array + large_array,
+    'constrained_tafeng_medium': {
+        'num_prods': medium_array,
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+    },
+    'constrained_tafeng_large': {
+        'num_prods': large_array,
+        'repeat_count': RC,
+        'prob_v0': None,
+        'max_assortment_size': 20,
+        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_uci_small': {
         'num_prods': small_array,
@@ -145,15 +170,24 @@ experiment_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 5,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD_CONSTRAINED] # ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP, REVENUE_ORDERED
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED, REVENUE_ORDERED_CONSTRAINED,
+                            BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_uci_medium_large': {
-        'num_prods': medium_array + large_array,
+    'constrained_uci_medium': {
+        'num_prods': medium_array,
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD_CONSTRAINED] #REVENUE_ORDERED
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+    },
+    'constrained_uci_large': {
+        'num_prods': large_array,
+        'repeat_count': RC,
+        'prob_v0': None,
+        'max_assortment_size': 20,
+        'parent_model_file': 'synthetic_models/models/uci.pkl',
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'mnl_revenue_ordered_uci': {
         'price_range': [1000],
@@ -175,14 +209,14 @@ experiment_set_dict = {
     }
 }
 
-v0_levels = range(10, 100, 20)
+v0_levels = range(10, 100, 10)
 v0_configs = {
     f'v0_{xr}_synthetic': {
         'price_range': [1000],
-        'num_prods': medium_array,
+        'num_prods': small_array+medium_array,
         'repeat_count': RC,
         'prob_v0': xr / 100,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT, BINSEARCHIMPROVED_QIP_MTHREAD]
     }
     for xr in v0_levels
 }
