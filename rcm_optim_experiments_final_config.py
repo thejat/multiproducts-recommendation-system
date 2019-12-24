@@ -2,6 +2,7 @@ from algorithms_config import *
 import os
 import json
 import logging, logging.config
+import collections
 
 default_meta = {'eps': 1e-3, 'print_results': True, 'print_debug': True}
 basic_keys = ['price_range', 'num_prods', 'repeat_count', 'algorithm_list']
@@ -22,7 +23,7 @@ small_array = list(range(small_lb,small_ub,small_delta))
 medium_array = list(range(medium_lb,medium_ub,medium_delta))
 large_array = list(range(large_lb,large_ub,large_delta))
 
-experiment_set_dict = {
+experiment_set_dict = collections.OrderedDict({
     # Small Experiments Config
     #'medium_qip_improved_test': {
     #    'price_range': [1000],
@@ -89,7 +90,10 @@ experiment_set_dict = {
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED, REVENUE_ORDERED_CONSTRAINED,
                             BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
-    },
+    }
+})
+
+mnl_set_dict = {
     'mnl_revenue_ordered_uci': {
         'price_range': [1000],
         'num_prods': small_array + medium_array + large_array,
@@ -141,7 +145,7 @@ medium_set_dict = {
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_tafeng_medium': {
         'num_prods': medium_array,
@@ -149,7 +153,7 @@ medium_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_uci_medium': {
         'num_prods': medium_array,
@@ -157,14 +161,14 @@ medium_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
     }
 }
 
 experiment_set_dict.update(medium_set_dict)
 
 
-v0_levels = range(10, 100, 10)
+v0_levels = range(10, 100, 20)
 v0_configs = {
     f'v0_{xr}_synthetic': {
         'price_range': [1000],
@@ -177,6 +181,7 @@ v0_configs = {
 }
 
 experiment_set_dict.update(v0_configs)
+
 
 large_set_dict = {
     # Large Experiments Config
@@ -231,6 +236,7 @@ large_set_dict = {
 
 experiment_set_dict.update(large_set_dict)
 
+experiment_set_dict.update(mnl_set_dict)
 
 
 def init_logger(default_path='logging.json', default_level=logging.DEBUG, env_key='LOG_CFG', log_dir='results/logs/'):
