@@ -234,7 +234,7 @@ def binSearchImproved_global_lower_bound(num_prods, C, rcm, meta):
     rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
     for i in range(2, len(price_sorted_products)):
         rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
-        if (rev_next_ro_set < rev_last_ro_set):
+        if (rev_next_ro_set + 1e-5 < rev_last_ro_set):
             improved_lower_bound = rcm['p'][price_sorted_products[i]]
             break
         rev_last_ro_set = rev_next_ro_set
