@@ -15,6 +15,10 @@ import logging
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cluster import SpectralClustering
+from synthetic_models.tcm_abstract_model import model as tcm_model
+from pyomo.environ import *
+
+opt = SolverFactory('bonmin')
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +42,8 @@ def init_optim_algorithms():
         'adxopt2': rcm_adxopt2_sets,
         'revenue-ordered': rcm_revenue_ordered,
         'mnl-revenue-ordered': mnl_revenue_ordered,
-        'brute-force': rcm_brute_force_search
+        'brute-force': rcm_brute_force_search,
+        'tcm_bonmin_mnlip': tcm_bonmin_mnlip
     }
 
 
@@ -111,8 +116,7 @@ def mnl_revenue_ordered(num_prods, C, rcm, meta):
 
 # ====================RCM Revenue Ordered Assortments ====================================
 def rcm_revenue_ordered(num_prods, C, rcm, meta):
-
-    #potentially have a constraint on the assortment size
+    # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
         C = meta['max_assortment_size']
@@ -124,7 +128,7 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
     maxIdx = -1
     den0, den1, den2 = rcm['v'][0], 0, 0
     num1, num2 = 0, 0
-    for i in range(1, min(C+1,len(price_sorted_products) + 1)):
+    for i in range(1, min(C + 1, len(price_sorted_products) + 1)):
         # rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         curr_prod = price_sorted_products[i - 1]
         num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
@@ -377,38 +381,38 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     p = cplex.Cplex()
     p.objective.set_sense(p.objective.sense.maximize)
 
-
-    #potentially have a constraint on the assortment size
+    # potentially have a constraint on the assortment size
     max_assortment_size = num_prods
     if 'max_assortment_size' in meta.keys():
         max_assortment_size = meta['max_assortment_size']
-        
-    #apply improvements along with max_assortment_size
+
+    # apply improvements along with max_assortment_size
     if 'is_improved_qip' in meta.keys():
-        selected_products = sorted(meta['selected_products']) #assumed 1 indexing
-        removed_products = sorted(meta['removed_products'])   #assumed 1 indexing
-        rhs_values = [max_assortment_size]+[1]*len(selected_products)+[0]*len(removed_products)
-        sense_values = ['L']+['E']*(len(selected_products)+len(removed_products))
+        selected_products = sorted(meta['selected_products'])  # assumed 1 indexing
+        removed_products = sorted(meta['removed_products'])  # assumed 1 indexing
+        rhs_values = [max_assortment_size] + [1] * len(selected_products) + [0] * len(removed_products)
+        sense_values = ['L'] + ['E'] * (len(selected_products) + len(removed_products))
         p.linear_constraints.add(rhs=rhs_values, senses=sense_values)
-        
+
         cols = []
-        ks,kr= 1,len(selected_products)+1
-        for i in range(1,num_prods+1):
+        ks, kr = 1, len(selected_products) + 1
+        for i in range(1, num_prods + 1):
             if i in selected_products:
-                cols.append([[0,ks],[1.0,1.0]])
+                cols.append([[0, ks], [1.0, 1.0]])
                 ks += 1
             elif i in removed_products:
-                cols.append([[kr],[1.0]])
+                cols.append([[kr], [1.0]])
                 kr += 1
             else:
-                cols.append([[0],[1.0]])
-        #print(kr)
-        #print(1+len(selected_products)+len(removed_products))
-        #print(cols)
-        #print(rhs_values)
-        #print(sense_values)
-        assert (kr==1+len(selected_products)+len(removed_products)),'Issue with number of rows and selected and removed products'
-        
+                cols.append([[0], [1.0]])
+        # print(kr)
+        # print(1+len(selected_products)+len(removed_products))
+        # print(cols)
+        # print(rhs_values)
+        # print(sense_values)
+        assert (kr == 1 + len(selected_products) + len(
+            removed_products)), 'Issue with number of rows and selected and removed products'
+
     else:
         p.linear_constraints.add(rhs=[max_assortment_size], senses="L")
         cols = [[[0], [1.0]] for i in range(num_prods)]
@@ -417,18 +421,18 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         the first element is a list of rows/constraint indices where the variable appears
         the second element is the coefficient of this variable in that row/constraint
         '''
-         
+
     obj = np.multiply(np.array(rcm['v'][1:]), np.array(rcm['p'][1:])) - K * np.array(rcm['v'][1:])
     obj = obj.tolist()
     ub = [1 for i in range(num_prods)]
     types = ''.join(['I' for i in range(num_prods)])
     names = ["x_" + str(i + 1) for i in range(num_prods)]
-    #print(obj)
-    #print(ub)
-    #print(types)
-    #print(names)
+    # print(obj)
+    # print(ub)
+    # print(types)
+    # print(names)
 
-    p.variables.add(obj=obj, ub=ub, columns=cols, types=types,names=names)
+    p.variables.add(obj=obj, ub=ub, columns=cols, types=types, names=names)
 
     qmat = []
     for idxi in range(num_prods):
@@ -442,15 +446,14 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     p.objective.set_quadratic(qmat)
 
     # temporarily enabling the following 8 lines
-    #p.write("qip.lp")
-    #logger.info(qmat)
-    #logger.info(types)
-    #logger.info(p.variables.get_lower_bounds())
-    #logger.info(p.variables.get_upper_bounds())
-    #logger.info(p.variables.get_names())
-    #logger.info(p.linear_constraints.get_num())
-    #logger.info(p.variables.get_num())
-
+    # p.write("qip.lp")
+    # logger.info(qmat)
+    # logger.info(types)
+    # logger.info(p.variables.get_lower_bounds())
+    # logger.info(p.variables.get_upper_bounds())
+    # logger.info(p.variables.get_names())
+    # logger.info(p.linear_constraints.get_num())
+    # logger.info(p.variables.get_num())
 
     p.set_log_stream(None)
     p.set_error_stream(None)
@@ -946,8 +949,7 @@ def rcm_brute_force_search(num_prods, C, rcm, meta=None, K=None):
 # ====================RCM ADXOPT1 with products===================
 
 def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
-
-    #potentially have a constraint on the assortment size
+    # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
         C = meta['max_assortment_size']
@@ -1047,8 +1049,7 @@ def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
 # ====================RCM ADXOPT2 with subsets===================
 # This function considers addition of subsets of size 2 in addition to individual items
 def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_exchange=True):
-
-    #potentially have a constraint on the assortment size
+    # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
         C = meta['max_assortment_size']
@@ -1180,8 +1181,7 @@ def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_
 # ====================RCM Mixed Integer program ===================
 
 def rcm_mixed_ip(num_prods, C, rcm, meta=None):
-
-    #potentially have a constraint on the assortment size
+    # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
         C = meta['max_assortment_size']
@@ -1200,7 +1200,7 @@ def rcm_mixed_ip(num_prods, C, rcm, meta=None):
 
     # Add Constraints to Model
     constraintCapacity = {1: opt_model.add_constraint(
-        opt_model.sum( x_vars[i, i] for i in range(1, num_prods + 1)) <= C, ctname=f"constraintCapacity")}
+        opt_model.sum(x_vars[i, i] for i in range(1, num_prods + 1)) <= C, ctname=f"constraintCapacity")}
 
     constraintsA = {(i, j): opt_model.add_constraint(
         ct=p_vars[i, j] <= x_vars[i, j], ctname=f"constraint_p_{i}{j}<x{i}{j}") for i in range(1, num_prods + 1) for j
@@ -1267,6 +1267,74 @@ def mixed_ip_get_r_val(rcm, i, j):
     if i == j:
         return rcm['p'][i]
     return rcm['p'][i] + rcm['p'][j]
+
+
+# ===================Three Choice Model(TCM) Bonmin Solver==========
+
+def tcm_bonmin_mnlip(num_prods, C, rcm, meta=None):
+    # Write Data File for corresponding model
+    bonmin_write_model_data_file(rcm, meta)
+    data_filepath = meta['data_filepath']
+    # create an instance
+    st = time.time()
+    instance = tcm_model.create_instance(data_filepath)
+    results = opt.solve(instance, tee=True)
+    maxSet = []
+    for i in instance.x:
+        if instance.x[i].value == 1.:
+            maxSet.append(i)
+    maxRev = instance.revenue.expr()
+    timeTaken = time.time() - st
+    solve_log = {}
+    return maxRev, maxSet, timeTaken, solve_log
+
+
+def bonmin_write_model_data_file(rcm, meta):
+    prices = rcm['p'][1:]  # removing p0
+    n = len(rcm['v']) - 1
+    # open file handle
+    filename = meta['data_filepath']
+    with open(filename, 'w') as f:
+        # Write N, v0
+        f.write(f"param N := {n};\n")
+        f.write(f"param v0 := {rcm['v'][0]};\n")
+
+        # write prices
+        f.write(f"param r :=\n")
+        for i, price in enumerate(prices):
+            f.write(f"{i + 1} {price}\n")
+        f.write(";\n")
+
+        # write v1s
+        f.write(f"param v1 :=\n")
+        for i in range(n):
+            f.write(f"{i + 1} {rcm['v'][i + 1]}\n")
+        f.write(";\n")
+
+        # write v2s
+        f.write(f"param v2 :=\n")
+        for i in range(n):
+            for j in range(i + 1, n):
+                val = rcm['v2'][tuple([i + 1, j + 1])]
+                f.write(f"{i + 1} {j + 1} {val}\n")
+                f.write(f"{j + 1} {i + 1} {val}\n")
+        f.write(";\n")
+
+        # write v3s
+        f.write(f"param v3 :=\n")
+        for i in range(n):
+            for j in range(i + 1, n):
+                for k in range(j + 1, n):
+                    val = rcm['v3'][tuple([i + 1, j + 1, k + 1])]
+                    f.write(f"{i + 1} {j + 1} {k + 1} {val}\n")
+                    f.write(f"{i + 1} {k + 1} {j + 1} {val}\n")
+                    f.write(f"{j + 1} {i + 1} {k + 1} {val}\n")
+                    f.write(f"{j + 1} {k + 1} {i + 1} {val}\n")
+                    f.write(f"{k + 1} {j + 1} {i + 1} {val}\n")
+                    f.write(f"{k + 1} {i + 1} {j + 1} {val}\n")
+        f.write(";\n")
+
+    return
 
 
 # ==================== Auxiliary Functions ===================

@@ -103,7 +103,7 @@ def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='t
 
 
 def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_dir='tmp/rcm_models/v2/', prob_v0=None,
-                            is_mnl=False):
+                            is_mnl=False, is_tcm=False):
     # Check If Dump Dir Exists
     if not os.path.exists(dump_dir):
         os.makedirs(dump_dir)
@@ -125,6 +125,13 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
                     rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0,
                                                                   is_mnl=is_mnl, selected_products=selected_products,
                                                                   mnl_v0=mnl_v0)
+                elif is_tcm:
+                    rcm_filename = f'rcm_model_{parent_modelname.split("_tcm")[0]}_{num_prod}_{i}.pkl'
+                    rcm_filepath = f'{dump_dir}/{rcm_filename}'
+                    tcm_v0, selected_products = get_selected_rcm_model_products(rcm_filepath)
+                    rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0,
+                                                                  is_tcm=is_tcm, selected_products=selected_products,
+                                                                  tcm_v0=tcm_v0)
                 else:
                     rcm_model = generate_derived_rcm_choice_model(parent_rcm_model, num_prod, prob_v0=prob_v0)
                 model_dict.update({'rcm_model': rcm_model})

@@ -23,21 +23,22 @@ small_array = list(range(small_lb,small_ub,small_delta))
 medium_array = list(range(medium_lb,medium_ub,medium_delta))
 large_array = list(range(large_lb,large_ub,large_delta))
 
+
 experiment_set_dict = collections.OrderedDict({
-    # Small Experiments Config
-    #'medium_qip_improved_test': {
-    #    'price_range': [1000],
-    #    'num_prods': medium_array,
-    #    'repeat_count': RC,
-    #    'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCHIMPROVED_QIP_EXACT]
-    #},
-   # 'constrained_medium_qip_test': {
-   #     'price_range': [1000],
-   #     'num_prods': medium_array,
-   #     'repeat_count': 1,
-   #     'max_assortment_size': 20,
-   #     'algorithm_list': [BINSEARCH_QIP_EXACT]
-   # },
+    'tafeng_small_test': {
+        'num_prods': [20, 40, 60],
+        'repeat_count': 2,
+        'prob_v0': None,
+        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
+        'algorithm_list': [BINSEARCH_QIP_EXACT]
+    },
+    'tcm_tafeng_test': {
+        'num_prods': [20, 40, 60],
+        'repeat_count': 2,
+        'parent_model_file': 'synthetic_models/models/tafeng_tcm.pkl',
+        'is_tcm_model': True,
+        'algorithm_list': [TCM_BONMIN_MNLIP]
+    },
     'small': {
         'price_range': [1000],
         'num_prods': small_array,

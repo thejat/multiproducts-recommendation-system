@@ -182,6 +182,15 @@ MNL_REVENUE_ORDERED = {
 }
 
 """
+Three Choice Model Solve using Bonmin Solver
+"""
+TCM_BONMIN_MNLIP = {
+    'solution_id': 'tcm_bonmin_mnlip',
+    'algo': 'tcm_bonmin_mnlip',
+    'data_filepath': 'tmp/tcm_datafile.dat'
+}
+
+"""
 Binary Search with MIPS Formulation using KNN for Comparision Step
 """
 # BINSEARCH_NN_EXACT = {
