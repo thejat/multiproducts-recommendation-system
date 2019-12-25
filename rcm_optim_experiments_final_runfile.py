@@ -43,11 +43,15 @@ for experiment_id in experiment_id_list:
         prob_v0 = None
     prob_v0_model_creation = None
     if 'parent_model_file' in experiment_set_dict[experiment_id].keys():
-        is_mnl_model = False
+        is_mnl_model,is_tcm_model = False, False
         if 'is_mnl_model' in experiment_set_dict[experiment_id].keys():
             is_mnl_model = experiment_set_dict[experiment_id]['is_mnl_model']
+
+        if 'is_tcm_model' in experiment_set_dict[experiment_id].keys():
+            is_tcm_model = experiment_set_dict[experiment_id]['is_tcm_model']
+
         dump_derived_rcm_models(parent_model_file, num_prods, repeat_count, dump_dir=model_dir,
-                                prob_v0=prob_v0_model_creation,is_mnl=is_mnl_model)
+                                prob_v0=prob_v0_model_creation, is_mnl=is_mnl_model, is_tcm=is_tcm_model)
     else:
         dump_rcm_models(price_range_list, num_prods, repeat_count, dump_dir=model_dir, prob_v0=prob_v0_model_creation)
 

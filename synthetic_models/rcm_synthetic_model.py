@@ -21,13 +21,13 @@ def generate_two_restricted_choice_model(price_range, prod, scaling_v0=1, scalin
 
 
 def generate_derived_rcm_choice_model(rcm_model, num_products=None, prob_v0=0.1, is_mnl=False, selected_products=None,
-                                      mnl_v0=None):
+                                      mnl_v0=None, is_tcm=False, tcm_v0=None):
     product_ids = np.array(list(rcm_model['p'].keys()))
     selected_products_ids = product_ids
     if num_products is not None:
         selected_products_ids = np.random.choice(product_ids, num_products, replace=False)
 
-    if is_mnl & (selected_products is not None):
+    if (is_mnl | is_tcm) & (selected_products is not None):
         selected_products_ids = selected_products
 
     new_rcm_model = {'product_ids': selected_products_ids}
@@ -39,7 +39,10 @@ def generate_derived_rcm_choice_model(rcm_model, num_products=None, prob_v0=0.1,
     v[0] = np.random.beta(1, 5) * max(v)
     if is_mnl & (mnl_v0 is not None):
         v[0] = mnl_v0
+    if is_tcm & (tcm_v0 is not None):
+        v[0] = tcm_v0
     v2 = {}
+    v3 = {}
     if not is_mnl:
         for key, value in rcm_model['v2'].items():
             if (key[0] in selected_products_ids) & (key[1] in selected_products_ids):
@@ -53,10 +56,27 @@ def generate_derived_rcm_choice_model(rcm_model, num_products=None, prob_v0=0.1,
                 if tuple([i, j]) not in v2_filled_keys:
                     v2[tuple([i, j])], v2[tuple([j, i])] = 0, 0
 
+    # add 3 interaction terms if tcm
+    if is_tcm:
+        for i in range(1, len(v)):
+            for j in range(i + 1, len(v)):
+                for k in range(j + 1, len(v)):
+                    val = 0
+                    original_key = [selected_products[i - 1], selected_products[j - 1], selected_products[k - 1]]
+                    original_key.sort()
+                    if tuple(original_key) in rcm_model['v3'].keys():
+                        val = rcm_model['v3'][tuple(original_key)]
+                    v3[tuple([i, j, k])], v3[tuple([i, k, j])] = val, val
+                    v3[tuple([j, i, k])], v3[tuple([j, k, i])] = val, val
+                    v3[tuple([k, i, j])], v3[tuple([k, j, i])] = val, val
+
     # Set V[0] such that prob v0 is prob_v0
     if prob_v0 is not None:
         v_sum = sum(v) + sum(v2.values()) - v[0]
         v[0] = prob_v0 * (v_sum) / (1 - prob_v0)
 
-    new_rcm_model.update({'p': prices, 'v': v, 'v2': v2})
+    if is_tcm:
+        new_rcm_model.update({'p': prices, 'v': v, 'v2': v2, 'v3': v3})
+    else:
+        new_rcm_model.update({'p': prices, 'v': v, 'v2': v2})
     return new_rcm_model
