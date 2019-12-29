@@ -10,6 +10,7 @@ from queue import Queue
 from optimization.rcm_optim import compare_nn_preprocess
 import traceback
 import logging
+from optimization.rcm_optim import rcm_calc_revenue, tcm_calc_revenue
 
 logger = logging.getLogger(__name__)
 
@@ -48,17 +49,47 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 index_filepath = \
                                     f'{model_dir}/nn_index_cache/rcm_nn_index_{price_range}_{num_prods}_{repeat_id}.pkl'
                                 meta.update({'index_filepath': index_filepath})
-
+                        # Add GT Model in Solution key
+                        gt_model_key = ''
+                        if 'gt_model' in meta.keys():
+                            if (meta['gt_model'] == 'tcm') | (meta['gt_model'] == 'rcm'):
+                                gt_model_key = '_with_gt_' + meta['gt_model']
                         if prob_v0 is None:
                             model_solve_filepath = \
-                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}.pkl'
+                                f'{output_dir}/rcm_model_' \
+                                    f'{meta["solution_id"]}{gt_model_key}_{price_range}_{num_prods}_{repeat_id}.pkl'
                         else:
                             model_solve_filepath = \
-                                f'{output_dir}/rcm_model_{meta["solution_id"]}_{price_range}_{num_prods}_{repeat_id}_v0_{int(prob_v0 * 100)}.pkl'
+                                f'{output_dir}/rcm_model_' \
+                                    f'{meta["solution_id"]}{gt_model_key}_{price_range}_{num_prods}_{repeat_id}_v0_' \
+                                    f'{int(prob_v0 * 100)}.pkl'
                         if not os.path.exists(model_solve_filepath):
                             sol_dict = {key: model_dict[key] for key in model_dict.keys() if not (key == 'rcm_model')}
                             sol_dict.update(meta)
                             rcm_solution = run_rcm_optimization(meta['algo'], num_prods, num_prods, rcm_model, meta)
+                            # Calculate revenue based on ground truth model if provided
+                            if 'gt_model' in meta.keys():
+                                gt_model_path = None
+                                if meta['gt_model'] == 'tcm':
+                                    gt_model_path = f'{model_dir}/rcm_model_{price_range}_tcm_{num_prods}_{repeat_id}.pkl'.replace(
+                                        '_mnl', '')
+                                    gt_model = pickle.load(open(gt_model_path, 'rb'))
+                                    gt_rcm_model = gt_model['rcm_model']
+                                    gt_revenue = tcm_calc_revenue(rcm_solution['max_set'], gt_rcm_model)
+                                    logger.info(f"GT Model(tcm) Revenue: {gt_revenue}")
+                                    rcm_solution['max_revenue'] = gt_revenue
+                                elif meta['gt_model'] == 'rcm':
+                                    gt_model_path = f'{model_dir}/rcm_model_{price_range}_{num_prods}_{repeat_id}.pkl'.replace(
+                                        '_mnl', '')
+                                    gt_model = pickle.load(open(gt_model_path, 'rb'))
+                                    gt_rcm_model = gt_model['rcm_model']
+                                    gt_revenue = rcm_calc_revenue(rcm_solution['max_set'], [], gt_rcm_model, 0)
+                                    logger.info(f"GT Model(rcm) Revenue: {gt_revenue}")
+                                    rcm_solution['max_revenue'] = gt_revenue
+                                else:
+                                    logger.error(
+                                        f"Ground truth model {meta['gt_model']} is not valid, try tcm/rcm as value...")
+
                             sol_dict.update(rcm_solution)
                             with open(model_solve_filepath, 'wb') as f:
                                 sol_dict.update(model_dict)
@@ -143,13 +174,15 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
 
     return None
 
+
 def get_selected_rcm_model_products(rcm_filepath):
     if os.path.exists(rcm_filepath):
-        model_dict = pickle.load(open(rcm_filepath,'rb'))
+        model_dict = pickle.load(open(rcm_filepath, 'rb'))
         return model_dict['rcm_model']['v'][0], model_dict['rcm_model']['product_ids']
     else:
         logger.error(f"Corresponding RCM Model {rcm_filepath} is not available, Selected Products Set to None...")
         return None
+
 
 def cache_nn_index_mthread(price_range_list, prod_count_list, repeat_count, model_dir='tmp/rcm_models/v2/',
                            num_threads=10):

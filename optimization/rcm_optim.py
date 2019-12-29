@@ -238,7 +238,7 @@ def binSearchImproved_global_lower_bound(num_prods, C, rcm, meta):
     rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
     for i in range(2, len(price_sorted_products)):
         rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
-        if (rev_next_ro_set + 1e-5 < rev_last_ro_set):
+        if rev_next_ro_set + 1e-5 < rev_last_ro_set:
             improved_lower_bound = rcm['p'][price_sorted_products[i]]
             break
         rev_last_ro_set = rev_next_ro_set
@@ -1399,3 +1399,27 @@ def rcm_calc_revenue(given_set, p, rcm, num_prods):
         den2 = np.sum([(rcm['v2'][tuple([given_set[xi], given_set[xj]])])
                        for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
         return (num1 + num2) / (den0 + den1 + den2)
+
+
+def tcm_calc_revenue(subset, tcm):
+    rev_num, rev_den = 0, tcm['v'][0]
+    # 1 interactions
+    if (len(subset) > 0):
+        rev_num += sum([(tcm['v'][i] * tcm['p'][i]) for i in subset])
+        rev_den += sum([(tcm['v'][i]) for i in subset])
+    # 2 interactions
+    if (len(subset) > 1):
+        rev_num += sum([(tcm['v2'][tuple([i, j])]) * (tcm['p'][i] + tcm['p'][j]) for i in subset for j in subset if
+                        (not i == j)]) * 0.5
+        rev_den += sum([(tcm['v2'][tuple([i, j])]) for i in subset for j in subset if (not i == j)]) * 0.5
+
+    # 3 interactions
+    if (len(subset) > 2):
+        rev_num += sum(
+            [(tcm['v3'][tuple([i, j, k])]) * (tcm['p'][i] + tcm['p'][j] + tcm['p'][k]) for i in subset for j in subset
+             for
+             k in subset if ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
+        rev_den += sum([(tcm['v3'][tuple([i, j, k])]) for i in subset for j in subset for k in subset if
+                        ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
+    print(rev_num, rev_den)
+    return rev_num / rev_den
