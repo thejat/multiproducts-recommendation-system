@@ -17,6 +17,8 @@ import pandas as pd
 from sklearn.cluster import SpectralClustering
 from synthetic_models.tcm_abstract_model import model as tcm_model
 from pyomo.environ import *
+import functools
+import multiprocessing as mp
 
 opt = SolverFactory('bonmin')
 
@@ -768,42 +770,73 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         #         for j in range(i, num_prods):
         #             f.write(f'{i + 1} {j + 1} {compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)}\n')
     else:
-        # SetupIndex transfer
+        # -------------
+        # Improved Setup index transfer
         start_time = time.time()
-        new_index = 0
-        for i in range(num_prods):
-            if i + 1 in not_allowed_products:
-                continue
-            else:
-                old2new_index[i] = new_index
-                new_index += 1
-
-        for key, val in old2new_index.items():
-            new2old_index[val] = key
-        logger.info(f"time taken in index assignment {(time.time() - start_time) * 1e6} microsecs")
+        old_products = np.ones((num_prods + 1))
+        old_products[not_allowed_products] = 0
+        old_products = old_products[1:]
+        new2old_index = np.where(old_products == 1)[0]
+        logger.info(f"time taken in improved index assignment {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'index_assignment'] = (time.time() - start_time) * 1e6
 
+        # SetupIndex transfer
+        # start_time = time.time()
+        # new_index = 0
+        # for i in range(num_prods):
+        #     if i + 1 in not_allowed_products:
+        #         continue
+        #     else:
+        #         old2new_index[i] = new_index
+        #         new_index += 1
+        #
+        # for key, val in old2new_index.items():
+        #     new2old_index[val] = key
+        #
+        # logger.info(f"time taken in index assignment {(time.time() - start_time) * 1e6} microsecs")
+        # time_log[f'index_assignment'] = (time.time() - start_time) * 1e6
+        # -------------
+
+        # -------------
+        # ADD improved version in Index assignment
         start_time = time.time()
-        for i in range(num_prods):
-            if (i + 1) in removed_products:
-                continue
-            elif (i + 1) in selected_products:
-                for j in range(i, num_prods):
-                    if (j + 1) not in not_allowed_products:
-                        Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-                                                                                          K)
-            else:  # i not in no optim products
-                for j in range(i, num_prods):
-                    if (j + 1) in removed_products:
-                        continue
-                    elif (j + 1) in selected_products:
-                        Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-                                                                                          K)
-                    else:  # J not in no optim products
-                        Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
-                                                                                          K)
-        logger.info(f"time taken in filling re-indexed Q matrix {(time.time() - start_time) * 1e6} microsecs")
+        for i in range(new_product_count):
+            for j in range(i, new_product_count):
+                idx_i, idx_j = new2old_index[i], new2old_index[j]
+                if i == j:
+                    Q_mat[i, j] = v_arr[idx_i + 1] * (p_arr[idx_i + 1] - K)
+                    selection_add = [vij_arr[tuple([xr, idx_i + 1])] / 2 * (p_arr[xr] + p_arr[idx_i + 1] - K) for xr in
+                                     selected_products]
+                    Q_mat[i, j] += sum(selection_add)
+                else:
+                    Q_mat[i, j] = (vij_arr[tuple([idx_i + 1, idx_j + 1])] / 2) * (
+                            p_arr[idx_i + 1] + p_arr[idx_j + 1] - K)
+        logger.info(f"time taken in filling improved re-indexed Q matrix {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'fill_reindexed_Q_matrix'] = (time.time() - start_time) * 1e6
+
+        # Older version of Q_matrix
+        # start_time = time.time()
+        # for i in range(num_prods):
+        #     if (i + 1) in removed_products:
+        #         continue
+        #     elif (i + 1) in selected_products:
+        #         for j in range(i, num_prods):
+        #             if (j + 1) not in not_allowed_products:
+        #                 Q_mat[old2new_index[j], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+        #                                                                                   K)
+        #     else:  # i not in no optim products
+        #         for j in range(i, num_prods):
+        #             if (j + 1) in removed_products:
+        #                 continue
+        #             elif (j + 1) in selected_products:
+        #                 Q_mat[old2new_index[i], old2new_index[i]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+        #                                                                                   K)
+        #             else:  # J not in no optim products
+        #                 Q_mat[old2new_index[i], old2new_index[j]] += compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr,
+        #                                                                                   K)
+        # logger.info(f"time taken in filling re-indexed Q matrix {(time.time() - start_time) * 1e6} microsecs")
+        # time_log[f'fill_reindexed_Q_matrix'] = (time.time() - start_time) * 1e6
+        # -------------
 
     if constraints_allowed:
         start_time = time.time()
@@ -819,14 +852,25 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         penalty_constant = penalty * (max_assortment_size ** 2)
         logger.info(f"time taken in adding constraints in Q matrix {(time.time() - start_time) * 1e6} microsecs")
 
+    # -------------
+    # Improved Version of file write
     start_time = time.time()
-    with open(input_filename, 'w') as f:
-        f.write(f'{num_variables} {int(num_variables * (num_variables + 1) / 2)}\n')
-        for i in range(num_variables):
-            for j in range(i, num_variables):
-                f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
+    file_str_arr = ['%d %d %f\n' % (i + 1, j + 1, Q_mat[i][j]) for i in range(num_variables) for j in
+                    range(i, num_variables)]
+    file_str = f'{num_variables} {int(num_variables * (num_variables + 1) / 2)}\n' + ''.join(file_str_arr)
+    open(input_filename, 'w').write(file_str)
     logger.info(f"time taken in writing Q matrix to file {(time.time() - start_time) * 1e6} microsecs")
     time_log[f'write_Q_matrix'] = (time.time() - start_time) * 1e6
+
+    # start_time = time.time()
+    # with open(input_filename, 'w') as f:
+    #     f.write(f'{num_variables} {int(num_variables * (num_variables + 1) / 2)}\n')
+    #     for i in range(num_variables):
+    #         for j in range(i, num_variables):
+    #             f.write(f'{i + 1} {j + 1} {Q_mat[i][j]}\n')
+    # logger.info(f"time taken in writing Q matrix to file {(time.time() - start_time) * 1e6} microsecs")
+    # time_log[f'write_Q_matrix'] = (time.time() - start_time) * 1e6
+    # -------------
 
     start_time = time.time()
     heuristic_list = meta['heuristic_list']
