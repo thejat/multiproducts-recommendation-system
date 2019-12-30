@@ -24,6 +24,12 @@ medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
+    'qubo_approx_time_analysis': {
+        'price_range': [1000],
+        'num_prods': large_array,
+        'repeat_count': 2,
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD]
+    },
     'small': {
         'price_range': [1000],
         'num_prods': small_array,

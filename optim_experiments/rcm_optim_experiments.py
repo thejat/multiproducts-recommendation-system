@@ -90,7 +90,16 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     logger.error(
                                         f"Ground truth model {meta['gt_model']} is not valid, try tcm/rcm as value...")
 
+                            # write time log in different pickle file
+                            sol_timelog_path = "%s/time_logs/%s" % (
+                                '/'.join(model_solve_filepath.split("/")[:-2]), model_solve_filepath.split("/")[-1])
+
+                            with open(sol_timelog_path, 'wb') as f:
+                                pickle.dump(rcm_solution['time_log'], f)
+                            # del time log
+                            del rcm_solution['time_log']
                             sol_dict.update(rcm_solution)
+
                             with open(model_solve_filepath, 'wb') as f:
                                 sol_dict.update(model_dict)
                                 pickle.dump(sol_dict, f)
