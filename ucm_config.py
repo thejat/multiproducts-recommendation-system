@@ -17,10 +17,10 @@ experiment_set_dict = {
     },
     # Medium Experiments Config
     'medium': {
-        'price_range': [100, 1000, 10000],
+        'price_range': [1000],
         'num_prods': list(range(100, 500, 100)),
         'repeat_count': 50,
-        'Hset_multiplier_list': [0, 0.25, 0.5, 1],
+        'Hset_multiplier_list': [0.25],
         'algorithm_list': [MIXED_IP, ADXOPT1_PRODUCTS]
     },
 }

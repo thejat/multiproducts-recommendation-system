@@ -146,6 +146,7 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
         den1 += rcm['v'][curr_prod]
         den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
         # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
+        #todo: Ask Theja/Deeksha about this change
         rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
@@ -1090,7 +1091,7 @@ def rcm_brute_force_search(num_prods, C, rcm, meta=None, K=None):
 
 # ====================RCM ADXOPT1 with products===================
 
-def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
+def rcm_adxopt1_products(num_prods, C_old, rcm, meta=None):
     # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
@@ -1190,7 +1191,7 @@ def rcm_adxopt1_products(num_prods, C, rcm, meta=None):
 
 # ====================RCM ADXOPT2 with subsets===================
 # This function considers addition of subsets of size 2 in addition to individual items
-def rcm_adxopt2_sets(num_prods, C, rcm, meta=None, two_sets=True, b=None, allow_exchange=True):
+def rcm_adxopt2_sets(num_prods, C_old, rcm, meta=None, two_sets=True, b=None, allow_exchange=True):
     # potentially have a constraint on the assortment size
     C = num_prods
     if 'max_assortment_size' in meta.keys():
