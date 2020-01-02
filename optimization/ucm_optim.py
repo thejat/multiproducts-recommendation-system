@@ -17,6 +17,7 @@ from synthetic_models.utils import set_char_from_ast, ast_from_set_char
 def init_optim_algorithms():
     global optim_methods_src
     optim_methods_src = {
+        'revenue-ordered': ucm_revenue_ordered,
         'mixed-ip': ucm_mixed_ip,
         'adxopt1': ucm_adxopt1_products,
         'adxopt2': ucm_adxopt2_sets,
@@ -29,6 +30,29 @@ def run_ucm_optimization(algorithm, num_prods, C, rcm_model, meta):
     optim_function = optim_methods_src[algorithm]
     maxRev, maxSet, timeTaken = optim_function(num_prods, C, rcm_model, meta)
     return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken}
+
+# ====================UCM Revenue Ordered Assortments ====================================
+def ucm_revenue_ordered(num_prods, C_old, ucm, meta):
+    # potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
+    price_list = ucm['p'][1:]
+    start_time = time.time()
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    maxRev, maxSet = 0, []
+    maxIdx = -1
+    for i in range(1, min(C + 1, len(price_sorted_products) + 1)):
+        rev_ro_set = ucm_calc_revenue(price_sorted_products[:i], ucm['p'], ucm, num_prods)
+        if rev_ro_set > maxRev:
+            maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
+    timeTaken = time.time() - start_time
+    if meta.get('print_results', False) is True:
+        logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
+    solve_log = {'max_idx': maxIdx}
+    return maxRev, maxSet, timeTaken, solve_log
+
 
 
 # ====================UCM Mixed Integer program ===================
