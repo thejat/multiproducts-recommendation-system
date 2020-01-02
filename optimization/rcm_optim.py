@@ -146,7 +146,7 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
         den1 += rcm['v'][curr_prod]
         den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
         # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
-        #todo: Ask Theja/Deeksha about this change
+        # todo: Ask Theja/Deeksha about this change
         rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
@@ -387,14 +387,35 @@ def rcm_binary_search(num_prods, C, rcm, meta):
     st = time.time()
     iter_count = 0
     solve_time = 0
+    time_log = {}
     count = 0
-    maxSet = None
+    # maxSet = None
+    best_set, best_set_revenue = [], 0
     while (U - L) > meta['eps']:
+        logger.info(f"\niteration: {iter_count}")
         count += 1
         K = (U + L) / 2
+
+        start_time = time.time()
         maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, K)
-        # logger.info('pseudorev/vo',maxPseudoRev/rcm['v'][0],'K:',K,' U:',U, ' L:',L)
-        solve_time += queryTimeLog
+        logger.info(f"time taken in comparision step {(time.time() - start_time) * 1e6} microsecs")
+        logger.info(f"MaxRev: {maxPseudoRev / rcm['v'][0]} maxSet: {maxSet}, v0: {rcm['v'][0]}")
+        time_log[f'I{count}___comparision'] = (time.time() - start_time) * 1e6
+        for key in queryTimeLog.keys():
+            time_log[f'I{count}___compstep_{key}'] = queryTimeLog[key]
+
+        # Compare Set Revenue with bestSet provided, and replace bestSet if more optimal
+        start_time = time.time()
+        current_set_revenue = rcm_calc_revenue(maxSet, p, rcm, num_prods)
+        if current_set_revenue > best_set_revenue:
+            best_set, best_set_revenue = maxSet, current_set_revenue
+        logger.info(
+            f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
+
+        # Logging Iteration results
+        start_time = time.time()
+        solve_time += time_log[f'I{count}___comparision']
         iter_count += 1
         solve_log[f'iter_{iter_count}'] = {
             'U': U,
@@ -405,17 +426,26 @@ def rcm_binary_search(num_prods, C, rcm, meta):
             L = K
         else:
             U = K
-    maxRev = rcm_calc_revenue(maxSet, p, rcm, num_prods)
+        logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
+
+    logger.info(f" Binary Search Improved Loop Done..")
+
+    # start_time = time.time()
+    # maxRev = rcm_calc_revenue(best_set, p, rcm, num_prods)
+    # logger.info(f"time taken afterloop (revenue calc) {(time.time() - start_time) * 1e6} microsecs")
+    # time_log[f'afterloop_revenue'] = (time.time() - start_time) * 1e6
     timeTaken = time.time() - st
+    time_log['total_time_taken'] = timeTaken
     solve_log['solve_time'] = solve_time
     solve_log['setup_time'] = timeTaken - solve_time
     if meta.get('print_results', False) is True:
         logger.info(
             f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
-        # print(meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken,
+        # print(meta['algo'], 'binary search rev:', best_set_revenue, 'set:', best_set, ' time taken:', timeTaken,
         #       ' num iters:',
         #       count)
-    return maxRev, maxSet, timeTaken, solve_log
+    return best_set_revenue, best_set, time_log, solve_log
 
 
 # --------------------BinSearch Compare Step: Quadratic Integer Programming -------------------
@@ -759,10 +789,21 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
 
     if not is_improved_qubo:
         # Setup Input File for approx step
+        # start_time = time.time()
+        # for i in range(num_prods):
+        #     for j in range(i, num_prods):
+        #         Q_mat[i, j] = compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+        # logger.info(f"time taken in filling Q matrix(unimproved) {(time.time() - start_time) * 1e6} microsecs")
+        # time_log[f'fill_unimproved_Q_matrix'] = (time.time() - start_time) * 1e6
+
         start_time = time.time()
         for i in range(num_prods):
             for j in range(i, num_prods):
-                Q_mat[i, j] = compare_qip_get_Qval(i, j, p_arr, v_arr, vij_arr, K)
+                if i == j:
+                    Q_mat[i, j] = v_arr[i + 1] * (p_arr[i + 1] - K)
+                else:
+                    Q_mat[i, j] = (vij_arr[tuple([i + 1, j + 1])] / 2) * (
+                            p_arr[i + 1] + p_arr[j + 1] - K)
         logger.info(f"time taken in filling Q matrix(unimproved) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'fill_unimproved_Q_matrix'] = (time.time() - start_time) * 1e6
         # with open(input_filename, 'w') as f:

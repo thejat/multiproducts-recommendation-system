@@ -28,7 +28,7 @@ experiment_set_dict = collections.OrderedDict({
         'price_range': [1000],
         'num_prods': large_array,
         'repeat_count': 2,
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD]
     },
     'qubo_approx_time_analysis': {
         'price_range': [1000],
