@@ -878,7 +878,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     time_limit = meta['time_multiplier'] * new_product_count
     threadlist = []
     mutex = Lock()
-    repeat_counter = 0
+    repeat_counter = 1
     maxRev, maxSet = -1, []
     logger.info(f"time taken in setting up threading mechanism {(time.time() - start_time) * 1e6} microsecs")
     time_log[f'setup_threading'] = (time.time() - start_time) * 1e6

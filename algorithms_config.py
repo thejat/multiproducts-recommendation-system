@@ -16,7 +16,7 @@ BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
     'time_multiplier': 0.0001,
-    'max_repeat_counter': 3,
+    'max_repeat_counter': 1,
     'MQLib_dir': '../MQLib/'
 }
 
@@ -34,7 +34,7 @@ BINSEARCH_QIP_MTHREAD_SPC = {
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
     'time_multiplier': 0.0001,
-    'max_repeat_counter': 3,
+    'max_repeat_counter': 1,
     'MQLib_dir': '../MQLib/'
 }
 
@@ -52,7 +52,7 @@ BINSEARCH_QIP_MTHREAD_CONSTRAINED = {
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
     'time_multiplier': 0.0001,
-    'max_repeat_counter': 3,
+    'max_repeat_counter': 1,
     'MQLib_dir': '../MQLib/'
 }
 
@@ -64,7 +64,7 @@ BINSEARCHIMPROVED_QIP_MTHREAD = {
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
     'time_multiplier': 0.0001,
-    'max_repeat_counter': 4,
+    'max_repeat_counter': 1,
     'MQLib_dir': '../MQLib/'
 }
 
@@ -79,7 +79,7 @@ BINSEARCH_QIP_MTHREAD = {
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
     'time_multiplier': 0.0001,
-    'max_repeat_counter': 3,
+    'max_repeat_counter': 1,
     'MQLib_dir': '../MQLib/'
 }
 
