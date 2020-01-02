@@ -16,6 +16,11 @@ if len(sys.argv) < 2:
 model_dir = rcm_model_dir
 solution_dir = rcm_solution_dir
 summary_dir = rcm_summary_dir
+timelog_dir = rcm_timelog_dir
+#create timelog dir if not present
+if not os.path.exists(timelog_dir):
+    os.makedirs(timelog_dir)
+
 experiment_id_list = sys.argv[1:]
 if experiment_id_list[0] == 'all':
     experiment_id_list = list(experiment_set_dict.keys())

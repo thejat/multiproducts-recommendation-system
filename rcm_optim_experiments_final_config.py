@@ -8,6 +8,7 @@ default_meta = {'eps': 1e-3, 'print_results': True, 'print_debug': True}
 basic_keys = ['price_range', 'num_prods', 'repeat_count', 'algorithm_list']
 rcm_model_dir = f'results/final_paper/rcm/models'
 rcm_solution_dir = 'results/final_paper/rcm/solutions'
+rcm_timelog_dir = 'results/final_paper/rcm/time_logs'
 rcm_summary_dir = 'results/final_paper/rcm'
 RC = 50
 small_lb = 20
