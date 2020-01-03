@@ -13,6 +13,10 @@ from itertools import combinations
 from itertools import chain
 import docplex.mp.model as cpx
 from synthetic_models.utils import set_char_from_ast, ast_from_set_char
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def init_optim_algorithms():
     global optim_methods_src
@@ -24,12 +28,15 @@ def init_optim_algorithms():
         'brute-force': ucm_brute_force_search
     }
 
+
 def run_ucm_optimization(algorithm, num_prods, C, rcm_model, meta):
     init_optim_algorithms()
     global optim_methods_src
     optim_function = optim_methods_src[algorithm]
     maxRev, maxSet, timeTaken = optim_function(num_prods, C, rcm_model, meta)
+    logger.info(f"Algorithm: {algorithm},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{str(timeTaken)}")
     return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken}
+
 
 # ====================UCM Revenue Ordered Assortments ====================================
 def ucm_revenue_ordered(num_prods, C_old, ucm, meta):
@@ -50,9 +57,7 @@ def ucm_revenue_ordered(num_prods, C_old, ucm, meta):
     timeTaken = time.time() - start_time
     if meta.get('print_results', False) is True:
         logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
-    solve_log = {'max_idx': maxIdx}
-    return maxRev, maxSet, timeTaken, solve_log
-
+    return maxRev, maxSet, timeTaken
 
 
 # ====================UCM Mixed Integer program ===================
@@ -120,7 +125,9 @@ def ucm_mixed_ip(num_prods, C, ucm, meta=None):
                                                 ctname=f"constraint_SUMpij=1")}
 
     # Add Objective Function
-    objective = mixed_ip_get_z_val(ucm, 1) * opt_model.sum(mixed_ip_get_r_val(ucm, i) * p1_vars[i] for i in range(1, num_prods + 1)) + mixed_ip_get_z_val(ucm, 2) * opt_model.sum(
+    objective = mixed_ip_get_z_val(ucm, 1) * opt_model.sum(
+        mixed_ip_get_r_val(ucm, i) * p1_vars[i] for i in range(1, num_prods + 1)) + mixed_ip_get_z_val(ucm,
+                                                                                                       2) * opt_model.sum(
         mixed_ip_get_r_val(ucm, i, j) * p2_vars[i, j] for i in range(1, num_prods + 1) for j in
         range(i + 1, num_prods + 1))
 
@@ -267,10 +274,10 @@ def ucm_adxopt1_products(num_prods, C, ucm, meta=None):
 
     # print(set_current,p,ucm,num_prods)
     rev_adx = ucm_calc_revenue(set_current, p, ucm, num_prods)
-    print("\t\tNumber of times ucm_calc_revenue is called:", rev_cal_counter)
-    print('rev adx:', rev_adx)
-    print("\t\tProducts in the adxopt assortment are", set_current)
-    print('\t\tTime taken for running adxopt is', timeTaken)
+    logger.info("Number of times ucm_calc_revenue is called: %d" % rev_cal_counter)
+    logger.info('rev adx: %.3f' % rev_adx)
+    logger.info("Products in the adxopt assortment are %s" % str(set_current))
+    logger.info('Time taken for running adxopt is %.3f secs...' % timeTaken)
 
     return rev_adx, set_current, timeTaken
 
@@ -391,10 +398,10 @@ def ucm_adxopt2_sets(num_prods, C, ucm, meta=None, two_sets=False, b=None, allow
     rev_adx = ucm_calc_revenue(set_current, p, ucm, num_prods)
     if meta is not None:
         if meta.get('print_results', False) is not False:
-            print("\t\tNumber of times ucm_calc_revenue is called:", rev_cal_counter)
-            print('rev adx:', rev_adx)
-            print("\t\tProducts in the adxopt assortment are", set_current)
-            print('\t\tTime taken for running adxopt is', timeTaken)
+            logger.info("Number of times ucm_calc_revenue is called: %d" % rev_cal_counter)
+            logger.info('rev adx:%.3f' % rev_adx)
+            logger.info("Products in the adxopt assortment are %s" % str(set_current))
+            logger.info('Time taken for running adxopt is %.3f secs..' % timeTaken)
 
     return rev_adx, set_current, timeTaken
 

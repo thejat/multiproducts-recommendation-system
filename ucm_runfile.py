@@ -4,6 +4,9 @@ import os, sys
 from optim_experiments.ucm_optim_experiments import dump_ucm_models, run_ucm_experiments_v2
 from datetime import datetime
 from ucm_config import *
+import logging
+init_logger()
+logger = logging.getLogger(__name__)
 
 if len(sys.argv) < 2:
     print("No Experiment Sets to perform, Exiting..")
