@@ -882,7 +882,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
 
     if constraints_allowed:
         start_time = time.time()
-        penalty = 1e2
+        penalty = 1e5
         # penalty = 100
         max_assortment_size = meta['max_assortment_size']
         for i in range(num_variables):
