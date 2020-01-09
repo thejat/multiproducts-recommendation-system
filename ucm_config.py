@@ -35,7 +35,7 @@ experiment_set_dict = collections.OrderedDict({
     # Medium Experiments Config
     'medium': {
         'price_range': [1000],
-        'num_prods': small_array,
+        'num_prods': medium_array,
         'repeat_count': RC,
         'Hset_multiplier_list': [0.25],
         'algorithm_list': [MIXED_IP, ADXOPT1_PRODUCTS, REVENUE_ORDERED]

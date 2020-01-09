@@ -190,16 +190,16 @@ medium_set_dict = {
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                           BINSEARCH_QIP_EXACT_CONSTRAINED]
-    },
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED,REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED]
+                        #, BINSEARCH_QIP_EXACT_CONSTRAINED]
+        },
     'constrained_tafeng_medium': {
         'num_prods': medium_array,
         'repeat_count': RC,
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED,REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
                            BINSEARCH_QIP_EXACT_CONSTRAINED]
     },
     'constrained_uci_medium': {
@@ -208,7 +208,7 @@ medium_set_dict = {
         'prob_v0': None,
         'max_assortment_size': 20,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED,REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
                            BINSEARCH_QIP_EXACT_CONSTRAINED]
     }
 }
