@@ -282,13 +282,34 @@ def binSearchImproved_global_lower_bound(num_prods, C, rcm, meta):
     improved_lower_bound = 0
     price_list = rcm['p'][1:]
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
-    rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
-    for i in range(2, len(price_sorted_products)):
-        rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
-        if rev_next_ro_set + 1e-5 < rev_last_ro_set:
+    # rev_last_ro_set = rcm_calc_revenue(price_sorted_products[:1], rcm['p'], rcm, num_prods)
+    # for i in range(2, len(price_sorted_products)):
+    #     rev_next_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+    #     if rev_next_ro_set + 1e-5 < rev_last_ro_set:
+    #         improved_lower_bound = rcm['p'][price_sorted_products[i]]
+    #         break
+    #     rev_last_ro_set = rev_next_ro_set
+    #
+    den0, den1, den2 = rcm['v'][0], 0, 0
+    num1, num2 = 0, 0
+    rev_last_ro_set = -1
+    for i in range(1, len(price_sorted_products)):
+        # rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        curr_prod = price_sorted_products[i - 1]
+        num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
+        num2 += sum(
+            [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
+                rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+        den1 += rcm['v'][curr_prod]
+        den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+        # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
+        # todo: Ask Theja/Deeksha about this change
+        rev_ro_set = (num1 + num2) / (den0 + den1 + den2)
+        # print(rev_ro_set, rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods))
+        if rev_ro_set + 1e5 < rev_last_ro_set:
             improved_lower_bound = rcm['p'][price_sorted_products[i]]
-            break
-        rev_last_ro_set = rev_next_ro_set
+        rev_last_ro_set = rev_ro_set
+
     return improved_lower_bound
 
 

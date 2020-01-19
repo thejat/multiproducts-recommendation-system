@@ -88,7 +88,7 @@ mnl_set_dict = {
         'price_range': [1000],
         'num_prods': small_array + medium_array + large_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
         'is_mnl_model': True,
         'gt_model': 'rcm',
@@ -98,7 +98,7 @@ mnl_set_dict = {
         'price_range': [1000],
         'num_prods': small_array + medium_array + large_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng_mnl.pkl',
         'is_mnl_model': True,
         'gt_model': 'rcm',
@@ -112,12 +112,13 @@ tcm_set_dict = {
         'repeat_count': RC,
         'parent_model_file': 'synthetic_models/models/tafeng_tcm.pkl',
         'is_tcm_model': True,
+        'prob_v0': 0.3,
         'algorithm_list': [TCM_BONMIN_MNLIP]
     },
     'tafeng_small_gt_tcm': {
         'num_prods': small_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'gt_model': 'tcm',
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
         'algorithm_list': [BINSEARCH_QIP_EXACT]
@@ -125,7 +126,7 @@ tcm_set_dict = {
     'tafeng_small_gt_tcm_mnl': {
         'num_prods': small_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng_mnl.pkl',
         'is_mnl_model': True,
         'gt_model': 'tcm',
@@ -136,12 +137,13 @@ tcm_set_dict = {
         'repeat_count': RC,
         'parent_model_file': 'synthetic_models/models/uci_tcm.pkl',
         'is_tcm_model': True,
+        'prob_v0':0.3,
         'algorithm_list': [TCM_BONMIN_MNLIP]
     },
     'uci_small_gt_tcm': {
         'num_prods': small_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'gt_model': 'tcm',
         'parent_model_file': 'synthetic_models/models/uci.pkl',
         'algorithm_list': [BINSEARCH_QIP_EXACT]
@@ -149,7 +151,7 @@ tcm_set_dict = {
     'uci_small_gt_tcm_mnl': {
         'num_prods': small_array,
         'repeat_count': RC,
-        'prob_v0': None,
+        'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
         'is_mnl_model': True,
         'gt_model': 'tcm',
@@ -229,6 +231,22 @@ v0_configs = {
 }
 
 experiment_set_dict.update(v0_configs)
+
+v00_levels = range(1, 20, 4)
+v00_configs = {
+    f'v00_{xr}_synthetic': {
+        'price_range': [1000],
+        'num_prods': small_array + medium_array,
+        'repeat_count': RC,
+        'prob_v0': xr / 100,
+        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT,
+                           BINSEARCHIMPROVED_QIP_MTHREAD]
+    }
+    for xr in v00_levels
+}
+
+experiment_set_dict.update(v00_configs)
+
 
 large_set_dict = {
     # Large Experiments Config
