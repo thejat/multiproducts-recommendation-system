@@ -38,6 +38,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                 if prob_v0 is not None:
                     logger.info(f"Prob v0 is {prob_v0} not None, Updating current RCM Model...")
                     v_sum = sum(rcm_model['v']) + sum(rcm_model['v2'].values()) - rcm_model['v'][0]
+                    if 'v3' in rcm_model.keys():
+                        v_sum += sum(rcm_model['v3'].values())
                     rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
                     meta_default['prob_v0'] = prob_v0
                 for optim_algo_dict in algorithm_list:
@@ -69,12 +71,17 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                             rcm_solution = run_rcm_optimization(meta['algo'], num_prods, num_prods, rcm_model, meta)
                             # Calculate revenue based on ground truth model if provided
                             if 'gt_model' in meta.keys():
-                                gt_model_path = None
                                 if meta['gt_model'] == 'tcm':
                                     gt_model_path = f'{model_dir}/rcm_model_{price_range}_tcm_{num_prods}_{repeat_id}.pkl'.replace(
                                         '_mnl', '')
                                     gt_model = pickle.load(open(gt_model_path, 'rb'))
                                     gt_rcm_model = gt_model['rcm_model']
+                                    if prob_v0 is not None:
+                                        logger.info(
+                                            f"Prob v0 is {prob_v0} not None, Updating current ground truth TCM Model...")
+                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - gt_rcm_model['v'][0]
+                                        v_sum += sum(gt_rcm_model['v3'].values())
+                                        gt_rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
                                     gt_revenue = tcm_calc_revenue(rcm_solution['max_set'], gt_rcm_model)
                                     logger.info(f"GT Model(tcm) Revenue: {gt_revenue}")
                                     rcm_solution['max_revenue'] = gt_revenue
@@ -83,6 +90,11 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                         '_mnl', '')
                                     gt_model = pickle.load(open(gt_model_path, 'rb'))
                                     gt_rcm_model = gt_model['rcm_model']
+                                    if prob_v0 is not None:
+                                        logger.info(
+                                            f"Prob v0 is {prob_v0} not None, Updating current ground truth RCM Model...")
+                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - gt_rcm_model['v'][0]
+                                        gt_rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
                                     gt_revenue = rcm_calc_revenue(rcm_solution['max_set'], [], gt_rcm_model, 0)
                                     logger.info(f"GT Model(rcm) Revenue: {gt_revenue}")
                                     rcm_solution['max_revenue'] = gt_revenue

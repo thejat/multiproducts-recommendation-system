@@ -443,14 +443,36 @@ def rcm_binary_search(num_prods, C, rcm, meta):
             'L': L,
             'comp_step_time': queryTimeLog
         }
-        if (maxPseudoRev / rcm['v'][0]) >= K:
-            L = K
+        if not 'is_heuristic' in meta.keys():
+            logger.info(
+                f"Regular Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+            logger.info(
+                f"Regular Method: U:{U}, L: {L}, K:{K}")
+            if (maxPseudoRev / rcm['v'][0]) >= K:
+                L = K
+            else:
+                U = K
         else:
-            U = K
+            logger.info(
+                f"Heuristic Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+            logger.info(
+                f"Heuristic Method: U:{U}, L: {L}, K:{K}")
+            if best_set_revenue >= U:
+                U = best_set_revenue + ((U - L) / 2)
+                L = best_set_revenue
+            elif best_set_revenue >= K:
+                L = best_set_revenue
+            elif (maxPseudoRev / rcm['v'][0]) >= K:
+                L = K
+            else:
+                U = K
+
         logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
 
-    logger.info(f" Binary Search Improved Loop Done..")
+    logger.info(f" Binary Search Loop Done..")
 
     # start_time = time.time()
     # maxRev = rcm_calc_revenue(best_set, p, rcm, num_prods)
@@ -802,7 +824,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
         if (meta['constraints_allowed']) & ('max_assortment_size' in meta.keys()):
             constraints_allowed = True
     if constraints_allowed:
-        num_variables += meta['max_assortment_size'] - 1
+        num_variables += meta['max_assortment_size']
 
     Q_mat = np.zeros((num_variables, num_variables))
     logger.info(f"time taken in allocating empty Q matrix {(time.time() - start_time) * 1e6} microsecs")

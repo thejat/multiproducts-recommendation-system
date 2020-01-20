@@ -72,7 +72,11 @@ def generate_derived_rcm_choice_model(rcm_model, num_products=None, prob_v0=0.1,
 
     # Set V[0] such that prob v0 is prob_v0
     if prob_v0 is not None:
-        v_sum = sum(v) + sum(v2.values()) - v[0]
+        v_sum = sum(v)-v[0]
+        if not is_mnl:
+            v_sum += sum(v2.values())
+        if is_tcm:
+            v_sum += sum(v3.values())
         v[0] = prob_v0 * (v_sum) / (1 - prob_v0)
 
     if is_tcm:

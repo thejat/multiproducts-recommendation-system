@@ -2,16 +2,10 @@
 Following is list of algorithms, and their variations used for optimization.
 """
 
-"""
-Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
-and subpartitioning problem using spectral clustering
-"""
-BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
-    'solution_id': 'binSearchImproved_qip_approx_multithread_spc',
+BINSEARCHIMPROVED_QIP_MTHREAD = {
+    'solution_id': 'binSearchImproved_qip_approx_multithread',
     'algo': 'binary-search-improved',
-    'clusters_allowed': True,
-    'max_problem_size': 1000,
-    'comparison_function': 'qip-approx-spc',
+    'comparison_function': 'qip-approx',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
@@ -21,15 +15,12 @@ BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
 }
 
 """
-Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
-and subpartitioning problem using spectral clustering
+Binary Search with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step
 """
-BINSEARCH_QIP_MTHREAD_SPC = {
-    'solution_id': 'binSearch_qip_approx_multithread_spc',
+BINSEARCH_QIP_MTHREAD = {
+    'solution_id': 'binSearch_qip_approx_multithread',
     'algo': 'binary-search',
-    'clusters_allowed': True,
-    'max_problem_size': 1000,
-    'comparison_function': 'qip-approx-spc',
+    'comparison_function': 'qip-approx',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
     'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
@@ -39,7 +30,7 @@ BINSEARCH_QIP_MTHREAD_SPC = {
 }
 
 """
-Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
+Binary Search with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
  along with constraint on num of products in assortment
 """
 
@@ -56,9 +47,14 @@ BINSEARCH_QIP_MTHREAD_CONSTRAINED = {
     'MQLib_dir': '../MQLib/'
 }
 
-BINSEARCHIMPROVED_QIP_MTHREAD = {
-    'solution_id': 'binSearchImproved_qip_approx_multithread',
-    'algo': 'binary-search-improved',
+"""
+Binary Search with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
+and an heuristic to avoid pitfalls during non convergence of qubo problems
+"""
+BINSEARCH_QIP_MTHREAD_HEURISTIC = {
+    'solution_id': 'binSearch_qip_approx_multithread_heuristic',
+    'is_heuristic': True,
+    'algo': 'binary-search',
     'comparison_function': 'qip-approx',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
@@ -68,12 +64,11 @@ BINSEARCHIMPROVED_QIP_MTHREAD = {
     'MQLib_dir': '../MQLib/'
 }
 
-"""
-Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step
-"""
-BINSEARCH_QIP_MTHREAD = {
-    'solution_id': 'binSearch_qip_approx_multithread',
+BINSEARCH_QIP_MTHREAD_HEURISTIC_CONSTRAINED = {
+    'solution_id': 'binSearch_qip_approx_multithread_constrained_heuristic',
+    'is_heuristic': True,
     'algo': 'binary-search',
+    'constraints_allowed': True,
     'comparison_function': 'qip-approx',
     'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
     'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
@@ -207,3 +202,39 @@ Binary Search with MIPS Formulation using LSH for Comparision Step
 #     'algo': 'binary-search',
 #     'comparison_function': 'nn-approx'
 # }
+
+"""
+Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
+and subpartitioning problem using spectral clustering
+"""
+BINSEARCHIMPROVED_QIP_MTHREAD_SPC = {
+    'solution_id': 'binSearchImproved_qip_approx_multithread_spc',
+    'algo': 'binary-search-improved',
+    'clusters_allowed': True,
+    'max_problem_size': 1000,
+    'comparison_function': 'qip-approx-spc',
+    'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
+    'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
+    'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
+    'time_multiplier': 0.0001,
+    'max_repeat_counter': 1,
+    'MQLib_dir': '../MQLib/'
+}
+
+"""
+Binary Seach with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step,
+and subpartitioning problem using spectral clustering
+"""
+BINSEARCH_QIP_MTHREAD_SPC = {
+    'solution_id': 'binSearch_qip_approx_multithread_spc',
+    'algo': 'binary-search',
+    'clusters_allowed': True,
+    'max_problem_size': 1000,
+    'comparison_function': 'qip-approx-spc',
+    'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
+    'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
+    'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
+    'time_multiplier': 0.0001,
+    'max_repeat_counter': 1,
+    'MQLib_dir': '../MQLib/'
+}
