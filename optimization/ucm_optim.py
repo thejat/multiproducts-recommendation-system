@@ -448,7 +448,7 @@ def ucm_get_assortment_probs(given_set, ucm, prod):
     return probs
 
 
-def ucm_calc_revenue(given_set, p, ucm, prod):
+def ucm_calc_revenue_old(given_set, p, ucm, prod):
     probs = ucm_get_assortment_probs(given_set, ucm, prod)
     probs_select_size_new = ucm['probs_select_size']
     rev = 0
@@ -464,3 +464,33 @@ def ucm_calc_revenue(given_set, p, ucm, prod):
             # print(set_char_vector,'subset_price',subset_price,'prob_subset',prob_subset)
             rev = rev + subset_price * prob_subset
     return rev
+
+
+def ucm_cal_revenue(given_set, p, ucm, prod):
+    HSet_idx = [tuple(np.where(xr)[0]) for xr in ucm['Hsets']]
+    W_set = {tuple(sorted(list(np.where(key)[0]))): ucm['W'][key] for key in ucm['W'].keys()}
+    v2 = lambda i, j: ucm['v'][i] * ucm['v'][j] * np.exp(W_set[tuple(sorted([i - 1, j - 1]))]) if (
+            tuple(sorted([i - 1, j - 1])) in HSet_idx) else ucm['v'][i] * ucm['v'][j]
+
+    pos0 = np.zeros(len(ucm['v']) - 1)
+    if (tuple(pos0) in ucm['Hsets']):
+        v00 = ucm['v'][0] * ucm['v'][0] * np.exp(ucm['W'][tuple(pos0)])
+    else:
+        v00 = ucm['v'][0] * ucm['v'][0]
+
+    num1, num2 = 0, 0
+    den1, den2 = ucm['v'][0], v00
+
+    num1 += np.sum([ucm['p'][xr] * ucm['v'][xr] for xr in given_set])
+    den1 += np.sum([ucm['v'][xr] for xr in given_set])
+
+    num2 += np.sum([(ucm['p'][given_set[xi]] + ucm['p'][given_set[xj]]) * (v2(given_set[xi], given_set[xj]))
+                    for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
+
+    den2 += np.sum(
+        [v2(given_set[xi], given_set[xj]) for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
+
+    revenue = (ucm['probs_select_size'][1]*(num1/den1)) + (ucm['probs_select_size'][2]*(num2/den2))
+
+    return revenue
+
