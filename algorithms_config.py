@@ -2,6 +2,31 @@
 Following is list of algorithms, and their variations used for optimization.
 """
 
+"""
+Noisy Binary Search with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step
+"""
+
+NOISYBINSEARCH_QIP_MTHREAD = {
+    'solution_id': 'binSearchNoisy_qip_approx_multithread',
+    'algo': 'noisy-binary-search',
+    'max_nbs_iterations': 1000,
+    'default_correct_compstep_probability': 0.6,
+    'step_width': 1e-3,
+    'early_termination_width': 1e-2,
+    'comparison_function': 'qip-approx',
+    'QIPApprox_input': 'tmp/ApproxQIP_input.txt',
+    'QIPApprox_output': 'tmp/ApproxQIP_output.txt',
+    'heuristic_list': ['BURER2002', 'DUARTE2005', 'LAGUNA2009HCE', 'FESTA2002VNS'],
+    'time_multiplier': 0.0001,
+    'max_repeat_counter': 1,
+    'MQLib_dir': '../MQLib/'
+}
+
+"""
+Binary Search with Solving QUBO Problem with MQLib Heuristics, using multiple heuristics in parallel at comparision step, and 
+some theoritical lemma to improve overall performance
+"""
+
 BINSEARCHIMPROVED_QIP_MTHREAD = {
     'solution_id': 'binSearchImproved_qip_approx_multithread',
     'algo': 'binary-search-improved',

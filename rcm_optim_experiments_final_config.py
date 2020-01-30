@@ -25,6 +25,12 @@ medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
+    'nbs_true_optimal_dict':{
+        'price_range': [1000],
+        'num_prods': [400],
+        'repeat_count': 10,
+        'algorithm_list': [NOISYBINSEARCH_QIP_MTHREAD]
+    },
     'small': {
         'price_range': [1000],
         'num_prods': small_array,

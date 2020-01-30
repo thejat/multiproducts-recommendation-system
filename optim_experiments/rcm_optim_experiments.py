@@ -25,10 +25,23 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
     if price_range_list is None:
         price_ranges = [parent_model_file.split('.')[0].split("/")[-1]]
     logger.info(f"OUTPUT Directory for results: {output_dir}")
+
+    # Get dictionary for true optimal values for all models based on v0 values
+    model_true_optimal_dict_filepath = 'results/final_paper/optimal_revenue_dict.pb'
+    if os.path.exists(model_true_optimal_dict_filepath):
+        model_true_optimal_dict = pickle.load(open(model_true_optimal_dict_filepath, 'rb'))
+        if 'optimal_solution_comparision' not in model_true_optimal_dict.keys():
+            model_true_optimal_dict['optimal_solution_comparision'] = dict()
+    else:
+        model_true_optimal_dict = {'optimal_solution_comparision': dict()}
+
     for price_range in price_ranges:
         for num_prods in prod_count_list:
             for repeat_id in range(repeat_count):
                 model_filepath = f'{model_dir}/rcm_model_{price_range}_{num_prods}_{repeat_id}.pkl'
+                model_key = model_filepath.split("/")[-1][:-4]
+                if model_key not in model_true_optimal_dict.keys():
+                    model_true_optimal_dict[model_key] = {}
                 if not os.path.exists(model_filepath):
                     logger.warning(f"No RCM model File {model_filepath} found, skipping...")
                     continue
@@ -65,6 +78,23 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 f'{output_dir}/rcm_model_' \
                                     f'{meta["solution_id"]}{gt_model_key}_{price_range}_{num_prods}_{repeat_id}_v0_' \
                                     f'{int(prob_v0 * 100)}.pkl'
+
+                        model_solve_key = model_solve_filepath.split("/")[-1][:-4]
+                        if 'binSearchNoisy' in model_solve_key:
+                            if num_prods in model_true_optimal_dict['optimal_solution_comparision'].keys():
+                                correct_compstep_count = \
+                                    model_true_optimal_dict['optimal_solution_comparision'][num_prods][
+                                        'correct_compstep_count']
+                                total_compstep_count = \
+                                    model_true_optimal_dict['optimal_solution_comparision'][num_prods][
+                                        'total_compstep_count']
+                                meta['correct_compstep_probability'] = correct_compstep_count / total_compstep_count
+                            else:
+                                logger.info("Correct Compstep Probability not available through data...")
+                        elif 'approx' in model_solve_key:
+                            if len(model_true_optimal_dict[model_key].keys()) > 0:
+                                meta['true_optimal_solution'] = max(list(model_true_optimal_dict[model_key].values()))
+
                         if not os.path.exists(model_solve_filepath):
                             sol_dict = {key: model_dict[key] for key in model_dict.keys() if not (key == 'rcm_model')}
                             sol_dict.update(meta)
@@ -79,7 +109,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     if prob_v0 is not None:
                                         logger.info(
                                             f"Prob v0 is {prob_v0} not None, Updating current ground truth TCM Model...")
-                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - gt_rcm_model['v'][0]
+                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - \
+                                                gt_rcm_model['v'][0]
                                         v_sum += sum(gt_rcm_model['v3'].values())
                                         gt_rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
                                     gt_revenue = tcm_calc_revenue(rcm_solution['max_set'], gt_rcm_model)
@@ -93,7 +124,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     if prob_v0 is not None:
                                         logger.info(
                                             f"Prob v0 is {prob_v0} not None, Updating current ground truth RCM Model...")
-                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - gt_rcm_model['v'][0]
+                                        v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - \
+                                                gt_rcm_model['v'][0]
                                         gt_rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
                                     gt_revenue = rcm_calc_revenue(rcm_solution['max_set'], [], gt_rcm_model, 0)
                                     logger.info(f"GT Model(rcm) Revenue: {gt_revenue}")
@@ -108,6 +140,22 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
 
                             with open(sol_timelog_path, 'wb') as f:
                                 pickle.dump(rcm_solution['time_log'], f)
+                            # update correct iteration counts if approx method
+                            if 'true_optimal_solution' in meta.keys():
+                                if 'optimal_solution_comparision' in rcm_solution.keys():
+                                    if num_prods not in model_true_optimal_dict['optimal_solution_comparision'].keys():
+                                        model_true_optimal_dict['optimal_solution_comparision'][num_prods] = {
+                                            'correct_compstep_count': 0, 'total_compstep_count': 0
+                                        }
+                                    # update current values accordingly
+                                    model_true_optimal_dict['optimal_solution_comparision'][num_prods][
+                                        'correct_compstep_count'] += rcm_solution['optimal_solution_comparision'][
+                                        'correct_compstep_count']
+                                    model_true_optimal_dict['optimal_solution_comparision'][num_prods][
+                                        'total_compstep_count'] += rcm_solution['optimal_solution_comparision'][
+                                        'total_compstep_count']
+                                # del optimal_solution_comparision
+                                del rcm_solution['optimal_solution_comparision']
                             # del time log
                             del rcm_solution['time_log']
                             sol_dict.update(rcm_solution)
@@ -123,12 +171,15 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                         if 'rcm_model' in sol_dict.keys():
                             del sol_dict['rcm_model']
                         experiment_summary.append(sol_dict)
+                        # update true optimal revenue dict
+                        model_true_optimal_dict[model_key][model_solve_key] = sol_dict['max_revenue']
                     except Exception as e:
                         logger.error(f"\n\nFailed For {model_filepath}")
                         logger.error(f"Algorithm Details")
                         logger.error(optim_algo_dict)
                         logger.error(f"Exception Details:{str(e)}\n\n")
                         traceback.print_exc()
+    pickle.dump(model_true_optimal_dict, open(model_true_optimal_dict_filepath, 'wb'))
     return experiment_summary
 
 
