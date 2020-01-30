@@ -466,7 +466,7 @@ def ucm_calc_revenue_old(given_set, p, ucm, prod):
     return rev
 
 
-def ucm_cal_revenue(given_set, p, ucm, prod):
+def ucm_calc_revenue(given_set, p, ucm, prod):
     HSet_idx = [tuple(np.where(xr)[0]) for xr in ucm['Hsets']]
     W_set = {tuple(sorted(list(np.where(key)[0]))): ucm['W'][key] for key in ucm['W'].keys()}
     v2 = lambda i, j: ucm['v'][i] * ucm['v'][j] * np.exp(W_set[tuple(sorted([i - 1, j - 1]))]) if (
