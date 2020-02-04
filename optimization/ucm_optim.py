@@ -39,6 +39,30 @@ def run_ucm_optimization(algorithm, num_prods, C, rcm_model, meta):
 
 
 # ====================UCM Revenue Ordered Assortments ====================================
+def ucm_revenue_ordered_old(num_prods, C_old, ucm, meta):
+    # potentially have a constraint on the assortment size
+    C = num_prods
+    if 'max_assortment_size' in meta.keys():
+        C = meta['max_assortment_size']
+
+    price_list = ucm['p'][1:]
+    start_time = time.time()
+    price_sorted_products = (np.argsort(price_list) + 1)[::-1]
+    HSet_idx = [tuple(np.where(xr)[0]) for xr in ucm['Hsets']]
+    W_set = {tuple(sorted(list(np.where(key)[0]))): ucm['W'][key] for key in ucm['W'].keys()}
+    maxRev, maxSet = 0, []
+    maxIdx = -1
+    for i in range(1, min(C + 1, len(price_sorted_products) + 1)):
+        rev_ro_set = ucm_calc_revenue(price_sorted_products[:i], ucm['p'], ucm, num_prods, HSet_idx=HSet_idx,
+                                      W_set=W_set)
+        if rev_ro_set > maxRev:
+            maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
+    timeTaken = time.time() - start_time
+    if meta.get('print_results', False) is True:
+        logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
+    return maxRev, maxSet, timeTaken
+
+
 def ucm_revenue_ordered(num_prods, C_old, ucm, meta):
     # potentially have a constraint on the assortment size
     C = num_prods
@@ -50,13 +74,43 @@ def ucm_revenue_ordered(num_prods, C_old, ucm, meta):
     price_sorted_products = (np.argsort(price_list) + 1)[::-1]
     maxRev, maxSet = 0, []
     maxIdx = -1
+
+    # setup for revenue calculation
+    HSet_idx = [tuple(np.where(xr)[0]) for xr in ucm['Hsets']]
+    W_set = {tuple(sorted(list(np.where(key)[0]))): ucm['W'][key] for key in ucm['W'].keys()}
+    v2 = lambda i, j: ucm['v'][i] * ucm['v'][j] * np.exp(W_set[tuple(sorted([i - 1, j - 1]))]) if (
+            tuple(sorted([i - 1, j - 1])) in HSet_idx) else ucm['v'][i] * ucm['v'][j]
+    pos0 = np.zeros(len(ucm['v']) - 1)
+    if (tuple(pos0) in ucm['Hsets']):
+        v00 = ucm['v'][0] * ucm['v'][0] * np.exp(ucm['W'][tuple(pos0)])
+    else:
+        v00 = ucm['v'][0] * ucm['v'][0]
+
+    num1, num2 = 0, 0
+    den1, den2 = ucm['v'][0], v00
+
     for i in range(1, min(C + 1, len(price_sorted_products) + 1)):
-        rev_ro_set = ucm_calc_revenue(price_sorted_products[:i], ucm['p'], ucm, num_prods)
+        # update numerators
+        st = time.time()
+        curr_prod = price_sorted_products[i - 1]
+        num1 += ucm['p'][curr_prod] * ucm['v'][curr_prod]
+        den1 += ucm['v'][curr_prod]
+
+        num2 += np.sum([(ucm['p'][price_sorted_products[xi]] + ucm['p'][curr_prod]) * (
+            v2(price_sorted_products[xi], curr_prod)) for xi in range(i - 1)])
+
+        den2 += np.sum([v2(price_sorted_products[xi], curr_prod) for xi in range(i - 1)])
+        rev_ro_set = (ucm['probs_select_size'][1] * (num1 / den1)) + (ucm['probs_select_size'][2] * (num2 / den2))
+
+        # print(f"revenue:{rev_ro_set} for set length {i} in {time.time() - st} secs...")
+        # rev_ro_set_old = ucm_calc_revenue(price_sorted_products[:i], ucm['p'], ucm, num_prods, HSet_idx=HSet_idx,
+        #                                   W_set=W_set)
+        # print(f"revold:{rev_ro_set_old}, revnew: {rev_ro_set} for set length {i}")
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
     timeTaken = time.time() - start_time
-    if meta.get('print_results', False) is True:
-        logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
+    # if meta.get('print_results', False) is True:
+    #     logger.info(str((meta['algo'], 'revenue ordered rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken)))
     return maxRev, maxSet, timeTaken
 
 
@@ -466,9 +520,8 @@ def ucm_calc_revenue_old(given_set, p, ucm, prod):
     return rev
 
 
-def ucm_calc_revenue(given_set, p, ucm, prod):
-    HSet_idx = [tuple(np.where(xr)[0]) for xr in ucm['Hsets']]
-    W_set = {tuple(sorted(list(np.where(key)[0]))): ucm['W'][key] for key in ucm['W'].keys()}
+def ucm_calc_revenue(given_set, p, ucm, prod, HSet_idx=None, W_set=None):
+    start_time = time.time()
     v2 = lambda i, j: ucm['v'][i] * ucm['v'][j] * np.exp(W_set[tuple(sorted([i - 1, j - 1]))]) if (
             tuple(sorted([i - 1, j - 1])) in HSet_idx) else ucm['v'][i] * ucm['v'][j]
 
@@ -490,7 +543,6 @@ def ucm_calc_revenue(given_set, p, ucm, prod):
     den2 += np.sum(
         [v2(given_set[xi], given_set[xj]) for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
 
-    revenue = (ucm['probs_select_size'][1]*(num1/den1)) + (ucm['probs_select_size'][2]*(num2/den2))
-
+    revenue = (ucm['probs_select_size'][1] * (num1 / den1)) + (ucm['probs_select_size'][2] * (num2 / den2))
+    # print(f"revenue:{revenue} for set length {len(given_set)} in {time.time() - start_time} secs...")
     return revenue
-

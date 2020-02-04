@@ -83,6 +83,33 @@ experiment_set_dict = collections.OrderedDict({
     }
 })
 
+nbs_config_dict = {
+    'nbsi_eval_synthetic': {
+        'price_range': [1000],
+        'num_prods': small_array + medium_array + large_array,
+        'repeat_count': RC,
+        # 'nbs_suffix': 'unconstrained',
+        'algorithm_list': [NOISYBINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCH_QIP_MTHREAD]
+    },
+    'nbs_eval_tafeng': {
+        'num_prods': small_array + medium_array + large_array,
+        'repeat_count': RC,
+        'prob_v0': None,
+        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
+        # 'nbs_suffix': 'unconstrained_tafeng_small',
+        'algorithm_list': [NOISYBINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCH_QIP_MTHREAD]
+    },
+    'nbs_eval_uci': {
+        'num_prods': small_array + medium_array + large_array,
+        'repeat_count': RC,
+        'prob_v0': None,
+        'parent_model_file': 'synthetic_models/models/uci.pkl',
+        # 'nbs_suffix': 'unconstrained_uci_small',
+        'algorithm_list': [NOISYBINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCH_QIP_MTHREAD]
+    },
+}
+experiment_set_dict.update(nbs_config_dict)
+
 mnl_set_dict = {
     'mnl_revenue_ordered_uci': {
         'price_range': [1000],
@@ -100,7 +127,7 @@ mnl_set_dict = {
         'repeat_count': RC,
         'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT]
+        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
     },
     'mnl_uci_gt_rcm_large': {
         'price_range': [1000],
@@ -108,7 +135,7 @@ mnl_set_dict = {
         'repeat_count': RC,
         'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD, REVENUE_ORDERED]
+        'algorithm_list': [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
     },
     'mnl_revenue_ordered_tafeng': {
         'price_range': [1000],
@@ -126,7 +153,7 @@ mnl_set_dict = {
         'repeat_count': RC,
         'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT]
+        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
     },
     'mnl_tafeng_gt_rcm_large': {
         'price_range': [1000],
@@ -134,7 +161,7 @@ mnl_set_dict = {
         'repeat_count': RC,
         'prob_v0': 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD, REVENUE_ORDERED]
+        'algorithm_list': [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
     }
 }
 
@@ -253,31 +280,31 @@ v0_levels = range(10, 100, 20)
 v0_configs = {
     f'v0_{xr}_synthetic': {
         'price_range': [1000],
-        'num_prods': small_array + medium_array,
+        'num_prods': large_array,
         'repeat_count': RC,
         'prob_v0': xr / 100,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list': [BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
+                           NOISYBINSEARCH_QIP_MTHREAD]
     }
     for xr in v0_levels
 }
 
 experiment_set_dict.update(v0_configs)
 
-v00_levels = range(1, 20, 4)
-v00_configs = {
-    f'v00_{xr}_synthetic': {
-        'price_range': [1000],
-        'num_prods': small_array + medium_array,
-        'repeat_count': RC,
-        'prob_v0': xr / 100,
-        'algorithm_list': [BINSEARCH_QIP_EXACT, BINSEARCH_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT,
-                           BINSEARCHIMPROVED_QIP_MTHREAD]
-    }
-    for xr in v00_levels
-}
-
-experiment_set_dict.update(v00_configs)
+# v00_levels = range(1, 20, 4)
+# v00_configs = {
+#     f'v00_{xr}_synthetic': {
+#         'price_range': [1000],
+#         'num_prods': large_array,
+#         'repeat_count': RC,
+#         'prob_v0': xr / 100,
+#         'algorithm_list': [BINSEARCH_QIP_MTHREAD,BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
+#                            NOISYBINSEARCH_QIP_MTHREAD]
+#     }
+#     for xr in v00_levels
+# }
+#
+# experiment_set_dict.update(v00_configs)
 
 large_set_dict = {
     # Large Experiments Config
