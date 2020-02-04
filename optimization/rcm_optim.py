@@ -38,6 +38,7 @@ E: Brute Search
 def init_optim_algorithms():
     global optim_methods_src
     optim_methods_src = {
+        'noisy-binary-search-improved': rcm_noisy_binary_search_improved,
         'noisy-binary-search': rcm_noisy_binary_search,
         'binary-search-improved': rcm_binary_search_v2,
         'binary-search': rcm_binary_search,
@@ -67,7 +68,7 @@ def run_rcm_optimization(algorithm, num_prods, C, rcm_model, meta):
             f"{str(timeTaken)}")
     else:
         logger.info(f"Algorithm: {algorithm},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{str(timeTaken)}")
-    if 'true_optimal_solution' in meta.keys():
+    if ('nbs_suffix' in meta.keys()) & ('true_optimal_solution' in meta.keys()):
         return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken, 'time_log': time_log,
                 'solve_log': str(solve_log), 'optimal_solution_comparision': solve_log['optimal_solution_comparision']}
     else:
@@ -164,6 +165,195 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
 
 
 # ====================RCM Noisy Binary Search Algorithm===================
+def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
+    '''
+    As comparision steps are not always accurate, Try Binary Search routine to build a density function along range.
+    :param num_prods: Number of products in optimization problem
+    :param rcm: Main BundleMVL Model
+    :param meta: Other required parameters for analysis
+    :return:
+    '''
+    init_comparision_methods()
+    global binSearch_comparision_src
+    comparison_function = binSearch_comparision_src[meta['comparison_function']]
+    p = rcm['p']
+    # L = 0  # L is the lower bound on the objective
+    # temp:
+    solve_log = {}
+    L = meta['eps']
+    U = 2 * max(p)  # U is the upper bound on the objective
+    solve_log['init_L'] = L
+    solve_log['init_U'] = U
+    if meta.get('eps', None) is None:
+        meta['eps'] = 1e-3
+
+    st = time.time()
+    solve_time = 0
+    time_log = {}
+    count = 0
+    maxSet = None
+    meta['is_improved_qubo'] = 1
+    ##Heuristic to get optimal Value for L based on Lemma 3"
+    start_time = time.time()
+    L = binSearchImproved_global_lower_bound(num_prods, C, rcm, meta)
+    logger.info(f"time taken to get global lower bound {(time.time() - start_time) * 1e6} microsecs")
+    time_log['global_bound'] = (time.time() - start_time) * 1e6
+    logger.debug(f"Improved Global Lower Bound For Noisy Binary Search : {L}")
+    solve_log['global_lower_bound'] = L
+    U = 2 * max(p)  # U is the upper bound on the objective
+    iter_count = 0
+    logger.debug(f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
+    best_set, best_set_revenue = [], 0
+
+    # Inititate NBS parameters and define helper functions
+    compstep_prob = meta['default_correct_compstep_probability']
+    if 'correct_compstep_probability' in meta.keys():
+        if meta['correct_compstep_probability'] >= 0.5:
+            compstep_prob = meta['correct_compstep_probability']
+
+    # Get parameters from config, and create ranges and distribution default
+    step_width = meta['step_width']
+    max_iters = meta['max_nbs_iterations']
+    early_termination_width = meta['early_termination_width']
+    belief_fraction = meta['belief_fraction']
+
+    # Initialize Uniform Distribution
+    range_idx = np.arange(L, U, step_width)
+    range_dist = np.ones_like(range_idx)
+    range_dist = range_dist / np.sum(range_dist)
+
+    range_dist = np.log(range_dist)
+
+    def get_pivot(range_dist):
+        exp_dist = np.exp(range_dist)
+        alpha = exp_dist.sum() * 0.5
+
+        # Finding the median of the distribution requires
+        # adding together many very small numbers, so it's not
+        # very stable. In part, we address this by randomly
+        # approaching the median from below or above.
+        if random.choice([True, False]):
+            return range_idx[exp_dist.cumsum() < alpha][-1]
+        else:
+            return range_idx[::-1][exp_dist[::-1].cumsum() < alpha][-1]
+
+    def get_belief_interval(range_dist, fraction=belief_fraction):
+        exp_dist = np.exp(range_dist)
+
+        epsilon = 0.5 * (1 - fraction)
+        epsilon = exp_dist.sum() * epsilon
+
+        left = range_idx[exp_dist.cumsum() < epsilon][-1]
+        right = range_idx[exp_dist.cumsum() > (exp_dist.sum() - epsilon)][0]
+        return left, right
+
+    logger.debug(
+        f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
+
+
+
+    for i in range(max_iters):
+        logger.info(f"\niteration: {iter_count}")
+        count += 1
+        # get Median of Distribution
+        median = get_pivot(range_dist)
+
+        #get Set of removed products based on best revenue we have
+        start_time = time.time()
+        removed_products = binSearchImproved_removed_products(num_prods, C, rcm, meta, best_set_revenue)
+        logger.info(f"time taken to remove products {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___remove_products'] = (time.time() - start_time) * 1e6
+
+        selected_products = [] #for legacy, Not required in this function
+        logger.debug(f"Iteration: {iter_count}; U,L:"
+                     f" {U},{L}; #products removed:{len(removed_products)}")
+        start_time = time.time()
+        meta['selected_products'] = selected_products
+        meta['removed_products'] = removed_products
+        if (len(selected_products + removed_products) >= num_prods):
+            maxSet = selected_products
+            break
+        logger.info(f"time taken to setup meta {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___meta_setup'] = (time.time() - start_time) * 1e6
+
+        # comparision function
+        start_time = time.time()
+        maxPseudoRev, maxSet, queryTimeLog = comparison_function(num_prods, C, rcm, meta, median)
+        logger.info(f"time taken in comparision step {(time.time() - start_time) * 1e6} microsecs")
+        logger.info(f"MaxRev: {maxPseudoRev / rcm['v'][0]} maxSet: {maxSet}, v0: {rcm['v'][0]}")
+        time_log[f'I{count}___comparision'] = (time.time() - start_time) * 1e6
+        for key in queryTimeLog.keys():
+            time_log[f'I{count}___compstep_{key}'] = queryTimeLog[key]
+
+        # Compare Set Revenue with bestSet provided, and replace bestSet if more optimal
+        start_time = time.time()
+        current_set_revenue = rcm_calc_revenue(maxSet, p, rcm, num_prods)
+        if current_set_revenue > best_set_revenue:
+            best_set, best_set_revenue = maxSet, current_set_revenue
+        logger.info(
+            f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
+
+        # Update Distribution and get belief intervals
+        if (maxPseudoRev / rcm['v'][0]) >= median:
+            range_dist[range_idx >= median] += np.log(compstep_prob)
+            range_dist[range_idx < median] += np.log(1 - compstep_prob)
+        else:
+            range_dist[range_idx <= median] += np.log(compstep_prob)
+            range_dist[range_idx > median] += np.log(1 - compstep_prob)
+
+        # shift all density from lower than best revenue got into upper end
+        shift_density_total = np.sum(np.exp(range_dist[range_idx < best_set_revenue]))
+        if (shift_density_total > 0):
+            range_dist[range_idx < best_set_revenue] = np.log(0)
+            range_dist[range_idx >= best_set_revenue] += np.log(
+                shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
+        # avoid overflows
+        range_dist -= np.max(range_dist)
+        belief_start, belief_end = get_belief_interval(range_dist)
+        # plot density function after each iteration
+        # plt.bar(range_idx, np.exp(range_dist))
+        # plt.xlabel('range')
+        # plt.ylabel('probability density')
+        # plt.title(f'pivot:{round(median,2)},beliefstart:{round(belief_start,2)},\n'
+        #           f'beliefend:{round(belief_end,2)},bestrev:{round(best_set_revenue,2)}')
+        # plt.savefig(f'results/final_paper/rcm/debug_plots/nbs/iter_{iter_count}.png')
+
+
+        # Logging Iteration results
+        start_time = time.time()
+        solve_time += time_log[f'I{count}___comparision']
+        iter_count += 1
+        solve_log[f'iter_{iter_count}'] = {
+            'belief_start': belief_start,
+            'belief_end': belief_end,
+            'removed_product_count':len(removed_products),
+            'optim_product_count': num_prods - (len(removed_products)),
+            'median': median,
+            'comp_step_time': queryTimeLog}
+
+        logger.info(
+            f"Improved Noisy Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+            f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+        logger.info(
+            f"Improved Noisy Method: median:{median}, belief_start:{belief_start}, belief_end:{belief_end}")
+
+        logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
+        time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
+        if (belief_end - belief_start) <= early_termination_width:
+            logger.info(
+                f"Terminating Early as early termination width {early_termination_width} >= belief interval"
+                f"({belief_end - belief_start})")
+            break
+
+    logger.info(f" Noisy Binary Search Loop Done in %d iterations.." % iter_count)
+    timeTaken = time.time() - st
+    time_log['total_time_taken'] = timeTaken
+    solve_log['solve_time'] = solve_time
+    solve_log['setup_time'] = timeTaken - solve_time
+
+    return best_set_revenue, best_set, time_log, solve_log
+
 
 def rcm_noisy_binary_search(num_prods, C, rcm, meta):
     '''
@@ -198,21 +388,23 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
     # Inititate NBS parameters and define helper functions
     compstep_prob = meta['default_correct_compstep_probability']
     if 'correct_compstep_probability' in meta.keys():
-        compstep_prob = meta['correct_compstep_probability']
-
-    assert (compstep_prob >= 0.5)
+        if meta['correct_compstep_probability'] >= 0.5:
+            compstep_prob = meta['correct_compstep_probability']
 
     # Get parameters from config, and create ranges and distribution default
     step_width = meta['step_width']
     max_iters = meta['max_nbs_iterations']
     early_termination_width = meta['early_termination_width']
+    belief_fraction = meta['belief_fraction']
 
     # Initialize Uniform Distribution
     range_idx = np.arange(L, U, step_width)
     range_dist = np.ones_like(range_idx)
     range_dist = range_dist / np.sum(range_dist)
 
-    def get_median(range_dist):
+    range_dist = np.log(range_dist)
+
+    def get_pivot(range_dist):
         exp_dist = np.exp(range_dist)
         alpha = exp_dist.sum() * 0.5
 
@@ -225,7 +417,7 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         else:
             return range_idx[::-1][exp_dist[::-1].cumsum() < alpha][-1]
 
-    def get_belief_interval(range_dist, fraction=0.95):
+    def get_belief_interval(range_dist, fraction=belief_fraction):
         exp_dist = np.exp(range_dist)
 
         epsilon = 0.5 * (1 - fraction)
@@ -241,7 +433,7 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         logger.info(f"\niteration: {iter_count}")
         count += 1
         # get Median of Distribution
-        median = get_median(range_dist)
+        median = get_pivot(range_dist)
 
         start_time = time.time()
         # comparision function
@@ -269,10 +461,23 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
             range_dist[range_idx <= median] += np.log(compstep_prob)
             range_dist[range_idx > median] += np.log(1 - compstep_prob)
 
+        # shift all density from lower than best revenue got into upper end
+        shift_density_total = np.sum(np.exp(range_dist[range_idx < best_set_revenue]))
+        if (shift_density_total > 0):
+            range_dist[range_idx < best_set_revenue] = np.log(0)
+            range_dist[range_idx >= best_set_revenue] += np.log(
+                shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
         # avoid overflows
         range_dist -= np.max(range_dist)
-
         belief_start, belief_end = get_belief_interval(range_dist)
+        # plot density function after each iteration
+        # plt.bar(range_idx, np.exp(range_dist))
+        # plt.xlabel('range')
+        # plt.ylabel('probability density')
+        # plt.title(f'pivot:{round(median,2)},beliefstart:{round(belief_start,2)},\n'
+        #           f'beliefend:{round(belief_end,2)},bestrev:{round(best_set_revenue,2)}')
+        # plt.savefig(f'results/final_paper/rcm/debug_plots/nbs/iter_{iter_count}.png')
+
 
         # Logging Iteration results
         start_time = time.time()
@@ -335,10 +540,11 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     solve_time = 0.
     solve_log = {}
     time_log = {}
-    if 'true_optimal_solution' in meta.keys():
-        correct_compstep_count = 0
-        total_compstep_count = 0
-        optimal_solution = meta['true_optimal_solution']
+    if 'nbs_suffix' in meta.keys():
+        if 'true_optimal_solution' in meta.keys():
+            correct_compstep_count = 0
+            total_compstep_count = 0
+            optimal_solution = meta['true_optimal_solution']
 
     count = 0
     maxSet = None
@@ -416,12 +622,13 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         else:
             U = K
         # Get data on this iteration
-        if 'true_optimal_solution' in meta.keys():
-            if (optimal_solution >= K) and (L == K):
-                correct_compstep_count += 1
-            elif (optimal_solution <= K) and (U == K):
-                correct_compstep_count += 1
-            total_compstep_count += 1
+        if 'nbs_suffix' in meta.keys():
+            if 'true_optimal_solution' in meta.keys():
+                if (optimal_solution >= K) and (L == K):
+                    correct_compstep_count += 1
+                elif (optimal_solution <= K) and (U == K):
+                    correct_compstep_count += 1
+                total_compstep_count += 1
     logger.info(f" Binary Search Improved Loop Done..")
 
     start_time = time.time()
@@ -432,12 +639,13 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     time_log['total_time_taken'] = timeTaken
     solve_log['solveTime'] = solve_time
     solve_log['setupTime'] = timeTaken - solve_time
-    if 'true_optimal_solution' in meta.keys():
-        solve_log['optimal_solution_comparision'] = {
-            'total_compstep_count': total_compstep_count,
-            'correct_compstep_count': correct_compstep_count,
-            'true_optimal_revenue': optimal_solution
-        }
+    if 'nbs_suffix' in meta.keys():
+        if 'true_optimal_solution' in meta.keys():
+            solve_log['optimal_solution_comparision'] = {
+                'total_compstep_count': total_compstep_count,
+                'correct_compstep_count': correct_compstep_count,
+                'true_optimal_revenue': optimal_solution
+            }
     if meta.get('print_results', False) is True:
         logger.info(
             f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
@@ -974,6 +1182,7 @@ def binSearchCompare_qip_approx_multithread(num_prods, C, rcm, meta, K):
     input_filename = meta['QIPApprox_input']
     output_filename = meta['QIPApprox_output']
     heuristic_list = meta['heuristic_list']
+    # heuristic_list = maxcut_heuristic_list
     time_limit = meta['time_multiplier'] * num_prods
     is_debug = meta['print_debug']
     MQLib_dir = meta['MQLib_dir']
