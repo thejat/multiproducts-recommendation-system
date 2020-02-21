@@ -58,21 +58,29 @@ def generate_derived_rcm_choice_model(rcm_model, num_products=None, prob_v0=0.1,
 
     # add 3 interaction terms if tcm
     if is_tcm:
-        for i in range(1, len(v)):
-            for j in range(i + 1, len(v)):
-                for k in range(j + 1, len(v)):
-                    val = 0
-                    original_key = [selected_products[i - 1], selected_products[j - 1], selected_products[k - 1]]
-                    original_key.sort()
-                    if tuple(original_key) in rcm_model['v3'].keys():
-                        val = rcm_model['v3'][tuple(original_key)]
-                    v3[tuple([i, j, k])], v3[tuple([i, k, j])] = val, val
-                    v3[tuple([j, i, k])], v3[tuple([j, k, i])] = val, val
-                    v3[tuple([k, i, j])], v3[tuple([k, j, i])] = val, val
+        # for i in range(1, len(v)):
+        #     for j in range(i + 1, len(v)):
+        #         for k in range(j + 1, len(v)):
+        #             val = 0
+        #             original_key = [selected_products[i - 1], selected_products[j - 1], selected_products[k - 1]]
+        #             original_key.sort()
+        #             if tuple(original_key) in rcm_model['v3'].keys():
+        #                 val = rcm_model['v3'][tuple(original_key)]
+        #                 v3[tuple([i, j, k])], v3[tuple([i, k, j])] = val, val
+        #                 v3[tuple([j, i, k])], v3[tuple([j, k, i])] = val, val
+        #                 v3[tuple([k, i, j])], v3[tuple([k, j, i])] = val, val
+        for v3_key in rcm_model['v3'].keys():
+            if (v3_key[0] in selected_products) & (v3_key[1] in selected_products) & (v3_key[2] in selected_products):
+                i, j, k = np.where(selected_products==v3_key[0])[0][0] + 1, np.where(selected_products==
+                    v3_key[1])[0][0] + 1, np.where(selected_products==v3_key[2])[0][0] + 1
+                val = rcm_model['v3'][v3_key]
+                v3[tuple([i, j, k])], v3[tuple([i, k, j])] = val, val
+                v3[tuple([j, i, k])], v3[tuple([j, k, i])] = val, val
+                v3[tuple([k, i, j])], v3[tuple([k, j, i])] = val, val
 
     # Set V[0] such that prob v0 is prob_v0
     if prob_v0 is not None:
-        v_sum = sum(v)-v[0]
+        v_sum = sum(v) - v[0]
         if not is_mnl:
             v_sum += sum(v2.values())
         if is_tcm:

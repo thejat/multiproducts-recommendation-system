@@ -39,16 +39,16 @@ def init_optim_algorithms():
     global optim_methods_src
     optim_methods_src = {
         'noisy-binary-search-improved': rcm_noisy_binary_search_improved,
-        'noisy-binary-search': rcm_noisy_binary_search,
-        'binary-search-improved': rcm_binary_search_v2,
-        'binary-search': rcm_binary_search,
-        'mixed-ip': rcm_mixed_ip,
-        'adxopt1': rcm_adxopt1_products,
-        'adxopt2': rcm_adxopt2_sets,
-        'revenue-ordered': rcm_revenue_ordered,
-        'mnl-revenue-ordered': mnl_revenue_ordered,
-        'brute-force': rcm_brute_force_search,
-        'tcm_bonmin_mnlip': tcm_bonmin_mnlip
+        'noisy-binary-search'         : rcm_noisy_binary_search,
+        'binary-search-improved'      : rcm_binary_search_v2,
+        'binary-search'               : rcm_binary_search,
+        'mixed-ip'                    : rcm_mixed_ip,
+        'adxopt1'                     : rcm_adxopt1_products,
+        'adxopt2'                     : rcm_adxopt2_sets,
+        'revenue-ordered'             : rcm_revenue_ordered,
+        'mnl-revenue-ordered'         : mnl_revenue_ordered,
+        'brute-force'                 : rcm_brute_force_search,
+        'tcm_bonmin_mnlip'            : tcm_bonmin_mnlip
     }
 
 
@@ -64,16 +64,18 @@ def run_rcm_optimization(algorithm, num_prods, C, rcm_model, meta):
         time_log = {'total_time_taken': timeTaken}
     if 'comparison_function' in meta.keys():
         logger.info(
-            f"Binary Search: {meta['comparison_function']},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken: "
-            f"{str(timeTaken)}")
+                f"Binary Search: {meta['comparison_function']},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken: "
+                f"{str(timeTaken)}")
     else:
         logger.info(f"Algorithm: {algorithm},MaxRev: {maxRev},MaxSet: {maxSet}, TimeTaken:{str(timeTaken)}")
     if ('nbs_suffix' in meta.keys()) & ('true_optimal_solution' in meta.keys()):
-        return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken, 'time_log': time_log,
-                'solve_log': str(solve_log), 'optimal_solution_comparision': solve_log['optimal_solution_comparision']}
+        return {'max_revenue'                 : maxRev, 'max_set': maxSet, 'time_taken': timeTaken,
+                'time_log'                    : time_log,
+                'solve_log'                   : str(solve_log),
+                'optimal_solution_comparision': solve_log['optimal_solution_comparision']}
     else:
         return {'max_revenue': maxRev, 'max_set': maxSet, 'time_taken': timeTaken, 'time_log': time_log,
-                'solve_log': str(solve_log)}
+                'solve_log'  : str(solve_log)}
 
 
 '''
@@ -90,12 +92,12 @@ Comparision Step Methods:
 def init_comparision_methods():
     global binSearch_comparision_src
     binSearch_comparision_src = {
-        'nn-exact': binSearchCompare_nn,
-        'nn-approx': binSearchCompare_nn,
-        'qip-exact': binSearchCompare_qip_exact,
+        'nn-exact'      : binSearchCompare_nn,
+        'nn-approx'     : binSearchCompare_nn,
+        'qip-exact'     : binSearchCompare_qip_exact,
         'qip-approx-spc': binSearchCompare_qip_approx_spc,
-        'qip-approx': binSearchCompare_qip_approx_multithread,
-        'ip-exact': binSearchCompare_ip_exact
+        'qip-approx'    : binSearchCompare_qip_approx_multithread,
+        'ip-exact'      : binSearchCompare_ip_exact
     }
 
 
@@ -148,13 +150,13 @@ def rcm_revenue_ordered(num_prods, C, rcm, meta):
         curr_prod = price_sorted_products[i - 1]
         num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
         num2 += sum(
-            [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
-                rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+                [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
+                    rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
         den1 += rcm['v'][curr_prod]
         den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+        # rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
         # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
-        # todo: Ask Theja/Deeksha about this change
-        rev_ro_set = rcm_calc_revenue(price_sorted_products[:i], rcm['p'], rcm, num_prods)
+        rev_ro_set = (num1 + num2) / (den0 + den1 + den2)
         if rev_ro_set > maxRev:
             maxRev, maxSet, maxIdx = rev_ro_set, list(price_sorted_products[:i]), i + 1
     timeTaken = time.time() - start_time
@@ -202,7 +204,8 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
     solve_log['global_lower_bound'] = L
     U = 2 * max(p)  # U is the upper bound on the objective
     iter_count = 0
-    logger.debug(f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
+    logger.debug(
+        f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
     best_set, best_set_revenue = [], 0
 
     # Inititate NBS parameters and define helper functions
@@ -248,9 +251,7 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         return left, right
 
     logger.debug(
-        f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
-
-
+            f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
 
     for i in range(max_iters):
         logger.info(f"\niteration: {iter_count}")
@@ -258,13 +259,13 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         # get Median of Distribution
         median = get_pivot(range_dist)
 
-        #get Set of removed products based on best revenue we have
+        # get Set of removed products based on best revenue we have
         start_time = time.time()
         removed_products = binSearchImproved_removed_products(num_prods, C, rcm, meta, best_set_revenue)
         logger.info(f"time taken to remove products {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___remove_products'] = (time.time() - start_time) * 1e6
 
-        selected_products = [] #for legacy, Not required in this function
+        selected_products = []  # for legacy, Not required in this function
         logger.debug(f"Iteration: {iter_count}; U,L:"
                      f" {U},{L}; #products removed:{len(removed_products)}")
         start_time = time.time()
@@ -291,7 +292,7 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-            f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Update Distribution and get belief intervals
@@ -307,7 +308,7 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         if (shift_density_total > 0):
             range_dist[range_idx < best_set_revenue] = np.log(0)
             range_dist[range_idx >= best_set_revenue] += np.log(
-                shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
+                    shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
         # avoid overflows
         range_dist -= np.max(range_dist)
         belief_start, belief_end = get_belief_interval(range_dist)
@@ -319,31 +320,30 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         #           f'beliefend:{round(belief_end,2)},bestrev:{round(best_set_revenue,2)}')
         # plt.savefig(f'results/final_paper/rcm/debug_plots/nbs/iter_{iter_count}.png')
 
-
         # Logging Iteration results
         start_time = time.time()
         solve_time += time_log[f'I{count}___comparision']
         iter_count += 1
         solve_log[f'iter_{iter_count}'] = {
-            'belief_start': belief_start,
-            'belief_end': belief_end,
-            'removed_product_count':len(removed_products),
-            'optim_product_count': num_prods - (len(removed_products)),
-            'median': median,
-            'comp_step_time': queryTimeLog}
+            'belief_start'         : belief_start,
+            'belief_end'           : belief_end,
+            'removed_product_count': len(removed_products),
+            'optim_product_count'  : num_prods - (len(removed_products)),
+            'median'               : median,
+            'comp_step_time'       : queryTimeLog}
 
         logger.info(
-            f"Improved Noisy Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
-            f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+                f"Improved Noisy Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
         logger.info(
-            f"Improved Noisy Method: median:{median}, belief_start:{belief_start}, belief_end:{belief_end}")
+                f"Improved Noisy Method: median:{median}, belief_start:{belief_start}, belief_end:{belief_end}")
 
         logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
         if (belief_end - belief_start) <= early_termination_width:
             logger.info(
-                f"Terminating Early as early termination width {early_termination_width} >= belief interval"
-                f"({belief_end - belief_start})")
+                    f"Terminating Early as early termination width {early_termination_width} >= belief interval"
+                    f"({belief_end - belief_start})")
             break
 
     logger.info(f" Noisy Binary Search Loop Done in %d iterations.." % iter_count)
@@ -370,10 +370,7 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
     # L = 0  # L is the lower bound on the objective
     # temp:
     solve_log = {}
-    L = meta['eps']
-    U = 2 * max(p)  # U is the upper bound on the objective
-    solve_log['init_L'] = L
-    solve_log['init_U'] = U
+    # L = meta['eps']
     if meta.get('eps', None) is None:
         meta['eps'] = 1e-3
 
@@ -383,7 +380,17 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
     time_log = {}
     count = 0
     # maxSet = None
-    best_set, best_set_revenue = [], 0
+    if 'max_assortment_size' in meta.keys():
+        logger.info("Revenue Ordered Heuristic for Lower Bound of Noisy Binary Search..")
+        best_set_revenue, best_set, _, _ = rcm_revenue_ordered(num_prods, C, rcm, meta)
+        L = best_set_revenue
+    else:
+        best_set_revenue, best_set = -1, []
+        L = meta['eps']
+
+    U = 2 * max(p)  # U is the upper bound on the objective
+    solve_log['init_L'] = L
+    solve_log['init_U'] = U
 
     # Inititate NBS parameters and define helper functions
     compstep_prob = meta['default_correct_compstep_probability']
@@ -413,7 +420,10 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         # very stable. In part, we address this by randomly
         # approaching the median from below or above.
         if random.choice([True, False]):
-            return range_idx[exp_dist.cumsum() < alpha][-1]
+            try:
+                return range_idx[exp_dist.cumsum() < alpha][-1]
+            except:
+                return range_idx[::-1][exp_dist[::-1].cumsum() < alpha][-1]
         else:
             return range_idx[::-1][exp_dist[::-1].cumsum() < alpha][-1]
 
@@ -422,13 +432,15 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
 
         epsilon = 0.5 * (1 - fraction)
         epsilon = exp_dist.sum() * epsilon
-
-        left = range_idx[exp_dist.cumsum() < epsilon][-1]
+        if (exp_dist[0] < epsilon):
+            left = range_idx[exp_dist.cumsum() < epsilon][-1]
+        else:
+            left = 0
         right = range_idx[exp_dist.cumsum() > (exp_dist.sum() - epsilon)][0]
         return left, right
 
     logger.debug(
-        f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
+            f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
     for i in range(max_iters):
         logger.info(f"\niteration: {iter_count}")
         count += 1
@@ -450,7 +462,7 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-            f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Update Distribution and get belief intervals
@@ -466,7 +478,7 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         if (shift_density_total > 0):
             range_dist[range_idx < best_set_revenue] = np.log(0)
             range_dist[range_idx >= best_set_revenue] += np.log(
-                shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
+                    shift_density_total / len(range_dist[range_idx >= best_set_revenue]))
         # avoid overflows
         range_dist -= np.max(range_dist)
         belief_start, belief_end = get_belief_interval(range_dist)
@@ -478,29 +490,28 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         #           f'beliefend:{round(belief_end,2)},bestrev:{round(best_set_revenue,2)}')
         # plt.savefig(f'results/final_paper/rcm/debug_plots/nbs/iter_{iter_count}.png')
 
-
         # Logging Iteration results
         start_time = time.time()
         solve_time += time_log[f'I{count}___comparision']
         iter_count += 1
         solve_log[f'iter_{iter_count}'] = {
-            'belief_start': belief_start,
-            'belief_end': belief_end,
-            'median': median,
+            'belief_start'  : belief_start,
+            'belief_end'    : belief_end,
+            'median'        : median,
             'comp_step_time': queryTimeLog}
 
         logger.info(
-            f"Noisy Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
-            f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+                f"Noisy Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
         logger.info(
-            f"Noisy Method: median:{median}, belief_start:{belief_start}, belief_end:{belief_end}")
+                f"Noisy Method: median:{median}, belief_start:{belief_start}, belief_end:{belief_end}")
 
         logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
         if (belief_end - belief_start) <= early_termination_width:
             logger.info(
-                f"Terminating Early as early termination width {early_termination_width} >= belief interval"
-                f"({belief_end - belief_start})")
+                    f"Terminating Early as early termination width {early_termination_width} >= belief interval"
+                    f"({belief_end - belief_start})")
             break
 
     logger.info(f" Noisy Binary Search Loop Done in %d iterations.." % iter_count)
@@ -607,12 +618,12 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
         logger.debug({f"K:{K}, MaxRev: {maxRev}, Time Taken: {queryTimeLog}"})
         logger.debug({f"MaxSet: {maxSet}"})
         solve_log[f'iter_{iter_count}'] = {
-            'U': U,
-            'L': L,
-            'removed_product_count': len(removed_products),
+            'U'                     : U,
+            'L'                     : L,
+            'removed_product_count' : len(removed_products),
             'selected_product_count': len(selected_products),
-            'optim_product_count': num_prods - (len(removed_products) + len(selected_products)),
-            'comp_step_time': queryTimeLog
+            'optim_product_count'   : num_prods - (len(removed_products) + len(selected_products)),
+            'comp_step_time'        : queryTimeLog
         }
         logger.info(f"time taken aftermath comparision step(logging) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___aftercomp_logging'] = (time.time() - start_time) * 1e6
@@ -642,13 +653,13 @@ def rcm_binary_search_v2(num_prods, C, rcm, meta):
     if 'nbs_suffix' in meta.keys():
         if 'true_optimal_solution' in meta.keys():
             solve_log['optimal_solution_comparision'] = {
-                'total_compstep_count': total_compstep_count,
+                'total_compstep_count'  : total_compstep_count,
                 'correct_compstep_count': correct_compstep_count,
-                'true_optimal_revenue': optimal_solution
+                'true_optimal_revenue'  : optimal_solution
             }
     if meta.get('print_results', False) is True:
         logger.info(
-            f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
+                f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
     #     logger.info(str((meta['algo'], 'binary search rev:', maxRev, 'set:', maxSet, ' time taken:', timeTaken,
     #                      ' num iters:', count)))
     return maxRev, maxSet, time_log, solve_log
@@ -674,8 +685,8 @@ def binSearchImproved_global_lower_bound(num_prods, C, rcm, meta):
         curr_prod = price_sorted_products[i - 1]
         num1 += rcm['p'][curr_prod] * rcm['v'][curr_prod]
         num2 += sum(
-            [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
-                rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
+                [(rcm['p'][price_sorted_products[xj]] + rcm['p'][curr_prod]) * (
+                    rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
         den1 += rcm['v'][curr_prod]
         den2 += sum([(rcm['v2'][tuple([price_sorted_products[xj], curr_prod])]) for xj in range(i - 1)])
         # print(rev_ro_set, (num1 + num2) / (den0 + den1 + den2))
@@ -812,7 +823,7 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-            f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Logging Iteration results
@@ -820,26 +831,26 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         solve_time += time_log[f'I{count}___comparision']
         iter_count += 1
         solve_log[f'iter_{iter_count}'] = {
-            'U': U,
-            'L': L,
+            'U'             : U,
+            'L'             : L,
             'comp_step_time': queryTimeLog
         }
         if not 'is_heuristic' in meta.keys():
             logger.info(
-                f"Regular Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
-                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+                    f"Regular Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                    f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
             logger.info(
-                f"Regular Method: U:{U}, L: {L}, K:{K}")
+                    f"Regular Method: U:{U}, L: {L}, K:{K}")
             if (maxPseudoRev / rcm['v'][0]) >= K:
                 L = K
             else:
                 U = K
         else:
             logger.info(
-                f"Heuristic Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
-                f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
+                    f"Heuristic Method: best_revenue: {best_set_revenue}, pseudo_revenue: "
+                    f"{(maxPseudoRev / rcm['v'][0])}, current_revenue: {current_set_revenue}")
             logger.info(
-                f"Heuristic Method: U:{U}, L: {L}, K:{K}")
+                    f"Heuristic Method: U:{U}, L: {L}, K:{K}")
             if best_set_revenue >= U:
                 U = best_set_revenue + ((U - L) / 2)
                 L = best_set_revenue
@@ -871,13 +882,13 @@ def rcm_binary_search(num_prods, C, rcm, meta):
     solve_log['setup_time'] = timeTaken - solve_time
     if 'true_optimal_solution' in meta.keys():
         solve_log['optimal_solution_comparision'] = {
-            'total_compstep_count': total_compstep_count,
+            'total_compstep_count'  : total_compstep_count,
             'correct_compstep_count': correct_compstep_count,
-            'true_optimal_revenue': optimal_solution
+            'true_optimal_revenue'  : optimal_solution
         }
     if meta.get('print_results', False) is True:
         logger.info(
-            f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
+                f"Total Time Taken: {timeTaken} secs, Solve Time: {solve_time} secs, Setup Time: {timeTaken - solve_time} secs")
         # print(meta['algo'], 'binary search rev:', best_set_revenue, 'set:', best_set, ' time taken:', timeTaken,
         #       ' num iters:',
         #       count)
@@ -925,7 +936,7 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
         # print(rhs_values)
         # print(sense_values)
         assert (kr == 1 + len(selected_products) + len(
-            removed_products)), 'Issue with number of rows and selected and removed products'
+                removed_products)), 'Issue with number of rows and selected and removed products'
         logger.info(f"time taken in setting up selected/removed vars {(time.time() - start_time) * 1e6} microsecs")
         time_log['selected_removed_vars'] = (time.time() - start_time) * 1e6
     else:
@@ -1133,7 +1144,7 @@ def cluster_optim_qip_run_python_subroutine(cluster_id, Q_mat_cluster, Q_mat_lab
         f"{'/'.join(output_filename.split('/')[:-1])}/{cluster_id}_{output_filename.split('/')[-1]}"
     with open(cluster_input_filename, 'w') as f:
         f.write(
-            f'{num_variables_cluster_id} {int(num_variables_cluster_id * (num_variables_cluster_id + 1) / 2)}\n')
+                f'{num_variables_cluster_id} {int(num_variables_cluster_id * (num_variables_cluster_id + 1) / 2)}\n')
         for i in range(num_variables_cluster_id):
             for j in range(i, num_variables_cluster_id):
                 f.write(f'{i + 1} {j + 1} {Q_mat_cluster[i][j]}\n')
@@ -1472,7 +1483,7 @@ def binSearchCompare_nn(num_prods, C, rcm, meta, K):
             idxk += 1
     vTemp = np.concatenate((vTemp_linear, vTemp_quadratic))
     query = np.concatenate(
-        (vTemp, [0]))  # appending extra coordinate as recommended by Simple LSH, no normalization being done
+            (vTemp, [0]))  # appending extra coordinate as recommended by Simple LSH, no normalization being done
 
     t_before = time.time()
     distList, approx_neighbors = db.kneighbors(query.reshape(1, -1), return_distance=True)
@@ -1821,22 +1832,25 @@ def rcm_mixed_ip(num_prods, C, rcm, meta=None):
 
     # Add Constraints to Model
     constraintCapacity = {1: opt_model.add_constraint(
-        opt_model.sum(x_vars[i, i] for i in range(1, num_prods + 1)) <= C, ctname=f"constraintCapacity")}
+            opt_model.sum(x_vars[i, i] for i in range(1, num_prods + 1)) <= C, ctname=f"constraintCapacity")}
 
     constraintsA = {(i, j): opt_model.add_constraint(
-        ct=p_vars[i, j] <= x_vars[i, j], ctname=f"constraint_p_{i}{j}<x{i}{j}") for i in range(1, num_prods + 1) for j
+            ct=p_vars[i, j] <= x_vars[i, j], ctname=f"constraint_p_{i}{j}<x{i}{j}") for i in range(1, num_prods + 1) for
+        j
         in
         range(i, num_prods + 1)}
 
     constraintsB = {(i, j): opt_model.add_constraint(
-        ct=p_vars[i, j] <= mixed_ip_get_v_var(rcm, i, j) * p_vars[0, 0], ctname=f"constraint_p_{i}{j}<=V{i}{j}p_{0}{0}")
+            ct=p_vars[i, j] <= mixed_ip_get_v_var(rcm, i, j) * p_vars[0, 0],
+            ctname=f"constraint_p_{i}{j}<=V{i}{j}p_{0}{0}")
         for i in
         range(1, num_prods + 1) for j in range(i, num_prods + 1)}
 
     constraintsC = {(i, j): opt_model.add_constraint(
-        ct=p_vars[i, j] + (mixed_ip_get_v_var(rcm, i, j) * (1 - x_vars[i, j])) >= mixed_ip_get_v_var(rcm, i, j) *
-           p_vars[0, 0],
-        ctname=f"constraint_p2_{i}{j}+V{i}{j}(1-x{i}{j})>=V{i}{j}p1_{0}{0}") for i in range(1, num_prods + 1) for j in
+            ct=p_vars[i, j] + (mixed_ip_get_v_var(rcm, i, j) * (1 - x_vars[i, j])) >= mixed_ip_get_v_var(rcm, i, j) *
+               p_vars[0, 0],
+            ctname=f"constraint_p2_{i}{j}+V{i}{j}(1-x{i}{j})>=V{i}{j}p1_{0}{0}") for i in range(1, num_prods + 1) for j
+        in
         range(i, num_prods + 1)}
 
     constraintsD = {
@@ -1850,13 +1864,14 @@ def rcm_mixed_ip(num_prods, C, rcm, meta=None):
                     range(1, num_prods + 1) for j in range(i, num_prods + 1)}
 
     constraintsG = {2: opt_model.add_constraint(
-        p_vars[0, 0] + opt_model.sum(
-            p_vars[i, j] for i in range(1, num_prods + 1) for j in range(i, num_prods + 1)) == 1,
-        ctname=f"constraint_SUMpij=1")}
+            p_vars[0, 0] + opt_model.sum(
+                    p_vars[i, j] for i in range(1, num_prods + 1) for j in range(i, num_prods + 1)) == 1,
+            ctname=f"constraint_SUMpij=1")}
 
     # Add Objective Function to the Model
     objective = opt_model.sum(
-        mixed_ip_get_r_val(rcm, i, j) * p_vars[i, j] for i in range(1, num_prods + 1) for j in range(i, num_prods + 1))
+            mixed_ip_get_r_val(rcm, i, j) * p_vars[i, j] for i in range(1, num_prods + 1) for j in
+            range(i, num_prods + 1))
 
     # Solve Optimization Model
     opt_model.maximize(objective)
@@ -1933,27 +1948,33 @@ def bonmin_write_model_data_file(rcm, meta):
         f.write(";\n")
 
         # write v2s
-        f.write(f"param v2 :=\n")
-        for i in range(n):
-            for j in range(i + 1, n):
-                val = rcm['v2'][tuple([i + 1, j + 1])]
-                f.write(f"{i + 1} {j + 1} {val}\n")
-                f.write(f"{j + 1} {i + 1} {val}\n")
-        f.write(";\n")
+        nonzero_key_counts = [key for key in rcm['v2'].keys() if rcm['v2'][key] > 0]
+        if len(nonzero_key_counts) > 0:
+            f.write(f"param v2 :=\n")
+            for i in range(n):
+                for j in range(i + 1, n):
+                    val = rcm['v2'][tuple([i + 1, j + 1])]
+                    if val > 0:
+                        f.write(f"{i + 1} {j + 1} {val}\n")
+                        f.write(f"{j + 1} {i + 1} {val}\n")
+            f.write(";\n")
 
         # write v3s
-        f.write(f"param v3 :=\n")
-        for i in range(n):
-            for j in range(i + 1, n):
-                for k in range(j + 1, n):
-                    val = rcm['v3'][tuple([i + 1, j + 1, k + 1])]
-                    f.write(f"{i + 1} {j + 1} {k + 1} {val}\n")
-                    f.write(f"{i + 1} {k + 1} {j + 1} {val}\n")
-                    f.write(f"{j + 1} {i + 1} {k + 1} {val}\n")
-                    f.write(f"{j + 1} {k + 1} {i + 1} {val}\n")
-                    f.write(f"{k + 1} {j + 1} {i + 1} {val}\n")
-                    f.write(f"{k + 1} {i + 1} {j + 1} {val}\n")
-        f.write(";\n")
+        if len(rcm['v3'].keys()) > 0:
+            f.write(f"param v3 :=\n")
+            for i in range(n):
+                for j in range(i + 1, n):
+                    for k in range(j + 1, n):
+                        v3_key = tuple([i + 1, j + 1, k + 1])
+                        if v3_key in rcm['v3'].keys():
+                            val = rcm['v3'][v3_key]
+                            f.write(f"{i + 1} {j + 1} {k + 1} {val}\n")
+                            f.write(f"{i + 1} {k + 1} {j + 1} {val}\n")
+                            f.write(f"{j + 1} {i + 1} {k + 1} {val}\n")
+                            f.write(f"{j + 1} {k + 1} {i + 1} {val}\n")
+                            f.write(f"{k + 1} {j + 1} {i + 1} {val}\n")
+                            f.write(f"{k + 1} {i + 1} {j + 1} {val}\n")
+            f.write(";\n")
 
     return
 
@@ -2015,8 +2036,9 @@ def rcm_calc_revenue(given_set, p, rcm, num_prods):
         num1 = np.sum([rcm['p'][xr] * rcm['v'][xr] for xr in given_set])
         den1 = np.sum([rcm['v'][xr] for xr in given_set])
         num2 = np.sum(
-            [(rcm['p'][given_set[xi]] + rcm['p'][given_set[xj]]) * (rcm['v2'][tuple([given_set[xi], given_set[xj]])])
-             for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
+                [(rcm['p'][given_set[xi]] + rcm['p'][given_set[xj]]) * (
+                rcm['v2'][tuple([given_set[xi], given_set[xj]])])
+                 for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
         den2 = np.sum([(rcm['v2'][tuple([given_set[xi], given_set[xj]])])
                        for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
         return (num1 + num2) / (den0 + den1 + den2)
@@ -2034,13 +2056,14 @@ def tcm_calc_revenue(subset, tcm):
                         (not i == j)]) * 0.5
         rev_den += sum([(tcm['v2'][tuple([i, j])]) for i in subset for j in subset if (not i == j)]) * 0.5
 
+    v3_value = lambda i, j, k: tcm['v3'][tuple([i, j, k])] if tuple([i, j, k]) in tcm['v3'].keys() else 0
     # 3 interactions
     if (len(subset) > 2):
         rev_num += sum(
-            [(tcm['v3'][tuple([i, j, k])]) * (tcm['p'][i] + tcm['p'][j] + tcm['p'][k]) for i in subset for j in subset
-             for
-             k in subset if ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
-        rev_den += sum([(tcm['v3'][tuple([i, j, k])]) for i in subset for j in subset for k in subset if
+                [(v3_value(i, j, k)) * (tcm['p'][i] + tcm['p'][j] + tcm['p'][k]) for i in subset for j in subset
+                 for
+                 k in subset if ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
+        rev_den += sum([v3_value(i, j, k) for i in subset for j in subset for k in subset if
                         ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
     print(rev_num, rev_den)
     return rev_num / rev_den

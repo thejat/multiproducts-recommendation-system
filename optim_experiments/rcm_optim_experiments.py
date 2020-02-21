@@ -64,6 +64,18 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 index_filepath = \
                                     f'{model_dir}/nn_index_cache/rcm_nn_index_{price_range}_{num_prods}_{repeat_id}.pkl'
                                 meta.update({'index_filepath': index_filepath})
+
+                        # Add max_assortment_size in meta if ratio is given
+                        if ('max_assortment_size_num_prods_ratio' in meta.keys()):
+                            if not ('max_assortment_size') in meta.keys():
+                                meta['max_assortment_size'] = int(
+                                    meta['max_assortment_size_num_prods_ratio'] * num_prods)
+                                logger.info(
+                                    f"Got Maximum Assortment Size: {meta['max_assortment_size']} based on ratio...")
+                            else:
+                                logger.warning("ratio and int both given, choose int based max_assortment_size...")
+                                logger.info(
+                                    f"Got Maximum Assortment Size: {meta['max_assortment_size']} based on ratio...")
                         # Add GT Model in Solution key
                         gt_model_key = ''
                         if 'gt_model' in meta.keys():
@@ -94,7 +106,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     logger.info("Correct Compstep Probability not available through data...")
                             elif 'approx' in model_solve_key:
                                 if len(model_true_optimal_dict[model_key].keys()) > 0:
-                                    meta['true_optimal_solution'] = max(list(model_true_optimal_dict[model_key].values()))
+                                    meta['true_optimal_solution'] = max(
+                                        list(model_true_optimal_dict[model_key].values()))
 
                         if not os.path.exists(model_solve_filepath):
                             sol_dict = {key: model_dict[key] for key in model_dict.keys() if not (key == 'rcm_model')}
@@ -104,12 +117,12 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                             if 'gt_model' in meta.keys():
                                 if meta['gt_model'] == 'tcm':
                                     gt_model_path = f'{model_dir}/rcm_model_{price_range}_tcm_{num_prods}_{repeat_id}.pkl'.replace(
-                                        '_mnl', '')
+                                            '_mnl', '')
                                     gt_model = pickle.load(open(gt_model_path, 'rb'))
                                     gt_rcm_model = gt_model['rcm_model']
                                     if prob_v0 is not None:
                                         logger.info(
-                                            f"Prob v0 is {prob_v0} not None, Updating current ground truth TCM Model...")
+                                                f"Prob v0 is {prob_v0} not None, Updating current ground truth TCM Model...")
                                         v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - \
                                                 gt_rcm_model['v'][0]
                                         v_sum += sum(gt_rcm_model['v3'].values())
@@ -119,12 +132,12 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     rcm_solution['max_revenue'] = gt_revenue
                                 elif meta['gt_model'] == 'rcm':
                                     gt_model_path = f'{model_dir}/rcm_model_{price_range}_{num_prods}_{repeat_id}.pkl'.replace(
-                                        '_mnl', '')
+                                            '_mnl', '')
                                     gt_model = pickle.load(open(gt_model_path, 'rb'))
                                     gt_rcm_model = gt_model['rcm_model']
                                     if prob_v0 is not None:
                                         logger.info(
-                                            f"Prob v0 is {prob_v0} not None, Updating current ground truth RCM Model...")
+                                                f"Prob v0 is {prob_v0} not None, Updating current ground truth RCM Model...")
                                         v_sum = sum(gt_rcm_model['v']) + sum(gt_rcm_model['v2'].values()) - \
                                                 gt_rcm_model['v'][0]
                                         gt_rcm_model['v'][0] = (prob_v0 * v_sum) / (1 - prob_v0)
@@ -133,7 +146,7 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                     rcm_solution['max_revenue'] = gt_revenue
                                 else:
                                     logger.error(
-                                        f"Ground truth model {meta['gt_model']} is not valid, try tcm/rcm as value...")
+                                            f"Ground truth model {meta['gt_model']} is not valid, try tcm/rcm as value...")
 
                             # write time log in different pickle file
                             sol_timelog_path = "%s/time_logs/%s" % (
@@ -145,7 +158,8 @@ def run_rcm_experiments_v2(model_dir, algorithm_list, meta_default, price_range_
                                 # update correct iteration counts if approx method
                                 if 'true_optimal_solution' in meta.keys():
                                     if 'optimal_solution_comparision' in rcm_solution.keys():
-                                        if num_prods not in model_true_optimal_dict['optimal_solution_comparision'].keys():
+                                        if num_prods not in model_true_optimal_dict[
+                                            'optimal_solution_comparision'].keys():
                                             model_true_optimal_dict['optimal_solution_comparision'][num_prods] = {
                                                 'correct_compstep_count': 0, 'total_compstep_count': 0
                                             }
@@ -197,14 +211,14 @@ def dump_rcm_models(price_range_list, prod_count_list, repeat_count, dump_dir='t
             for i in range(repeat_count):
                 dump_filename = f'rcm_model_{price_range}_{num_prod}_{i}.pkl'
                 if not os.path.exists(f'{dump_dir}/{dump_filename}'):
-                    model_dict = {'price_range': price_range, 'num_prod': num_prod, 'repeat_id': i,
+                    model_dict = {'price_range'     : price_range, 'num_prod': num_prod, 'repeat_id': i,
                                   'time_of_creation': time_now}
                     rcm_model = generate_two_restricted_choice_model(price_range, num_prod, prob_v0=prob_v0)
                     model_dict.update({'rcm_model': rcm_model})
                     with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
                         pickle.dump(model_dict, f)
                         logger.info(
-                            f"Created RCM Model for price range: {price_range}, num products:{num_prod}, repeat_id:{i}")
+                                f"Created RCM Model for price range: {price_range}, num products:{num_prod}, repeat_id:{i}")
 
     return None
 
@@ -223,7 +237,7 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
         for i in range(repeat_count):
             dump_filename = f'rcm_model_{parent_modelname}_{num_prod}_{i}.pkl'
             if not os.path.exists(f'{dump_dir}/{dump_filename}'):
-                model_dict = {'parent_model': parent_modelname, 'num_prod': num_prod, 'repeat_id': i,
+                model_dict = {'parent_model'    : parent_modelname, 'num_prod': num_prod, 'repeat_id': i,
                               'time_of_creation': time_now}
                 if is_mnl:
                     rcm_filename = f'rcm_model_{parent_modelname.split("_mnl")[0]}_{num_prod}_{i}.pkl'
@@ -246,7 +260,7 @@ def dump_derived_rcm_models(model_filepath, prod_count_list, repeat_count, dump_
                 with open(f'{dump_dir}/{dump_filename}', 'wb') as f:
                     pickle.dump(model_dict, f)
                     logger.info(
-                        f"Created RCM Model for parent model: {parent_modelname}, num products:{num_prod}, repeat_id:{i}")
+                            f"Created RCM Model for parent model: {parent_modelname}, num products:{num_prod}, repeat_id:{i}")
 
     return None
 
@@ -314,10 +328,10 @@ def cache_nn_run_subroutine(message_queue, threadID, model_dir, index_cache_dir)
             with open(f'{index_cache_dir}/{index_filename}', 'wb') as f:
                 pickle.dump(index_dict, f)
             logger.info(
-                f"Created index dict for threadID:{threadID}, price range: {price_range}, num products:{num_prod}, repeat_id:{repeat_id}")
+                    f"Created index dict for threadID:{threadID}, price range: {price_range}, num products:{num_prod}, repeat_id:{repeat_id}")
         else:
             logger.info(
-                f"Already Exists: index dict threadID:{threadID}, price: {price_range}, num products:{num_prod}, repeat_id:{repeat_id}")
+                    f"Already Exists: index dict threadID:{threadID}, price: {price_range}, num products:{num_prod}, repeat_id:{repeat_id}")
         message_queue.task_done()
 
     return None

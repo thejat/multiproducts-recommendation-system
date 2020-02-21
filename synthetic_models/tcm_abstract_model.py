@@ -11,9 +11,9 @@ model.I = RangeSet(1, model.N)
 
 # Create Parameter for V's
 model.v0 = Param(within=Reals)
-model.v1 = Param(model.I, within=Reals)
-model.v2 = Param(model.I, model.I, within=Reals)
-model.v3 = Param(model.I, model.I, model.I, within=Reals)
+model.v1 = Param(model.I, within=Reals, default=0.)
+model.v2 = Param(model.I, model.I, within=Reals, default=0)
+model.v3 = Param(model.I, model.I, model.I, within=Reals, default=0)
 
 # Create Parameter for Prices of Products
 
