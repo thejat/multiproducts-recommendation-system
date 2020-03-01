@@ -148,7 +148,7 @@ tcm_set_dict = {
         'parent_model_file': 'synthetic_models/models/tafeng_tcm.pkl',
         'is_tcm_model': True,
         'prob_v0': 0.3,
-        'algorithm_list': [TCM_BONMIN_MNLIP]
+        'algorithm_list': [BINSEARCH_TCM_BONMIN_EXACT,TCM_BONMIN_MNLIP]
     },
     'tafeng_small_gt_tcm': {
         'num_prods': small_array,
@@ -173,7 +173,7 @@ tcm_set_dict = {
         'parent_model_file': 'synthetic_models/models/uci_tcm.pkl',
         'is_tcm_model': True,
         'prob_v0': 0.3,
-        'algorithm_list': [TCM_BONMIN_MNLIP]
+        'algorithm_list': [BINSEARCH_TCM_BONMIN_EXACT,TCM_BONMIN_MNLIP]
     },
     'uci_small_gt_tcm': {
         'num_prods': small_array,

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.cluster import SpectralClustering
 from synthetic_models.tcm_abstract_model import model as tcm_model
+from synthetic_models.tcm_abstract_model_compstep import model as tcm_model_compstep
 from pyomo.environ import *
 import functools
 import multiprocessing as mp
@@ -92,6 +93,7 @@ Comparision Step Methods:
 def init_comparision_methods():
     global binSearch_comparision_src
     binSearch_comparision_src = {
+        'tcm-exact'     : binSearchCompare_tcm_exact,
         'nn-exact'      : binSearchCompare_nn,
         'nn-approx'     : binSearchCompare_nn,
         'qip-exact'     : binSearchCompare_qip_exact,
@@ -205,7 +207,7 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
     U = 2 * max(p)  # U is the upper bound on the objective
     iter_count = 0
     logger.debug(
-        f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
+            f"Starting Noisy Binary Search with comparision function:{meta['comparison_function']} U: {U},L:{L}....")
     best_set, best_set_revenue = [], 0
 
     # Inititate NBS parameters and define helper functions
@@ -292,7 +294,8 @@ def rcm_noisy_binary_search_improved(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6}"
+                f" microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Update Distribution and get belief intervals
@@ -462,7 +465,8 @@ def rcm_noisy_binary_search(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6}"
+                f" microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Update Distribution and get belief intervals
@@ -823,7 +827,8 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         if current_set_revenue > best_set_revenue:
             best_set, best_set_revenue = maxSet, current_set_revenue
         logger.info(
-                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6} microsecs")
+                f"time taken to compare with current best set(calc revenue) {(time.time() - start_time) * 1e6}"
+                f" microsecs")
         time_log[f'I{count}___compare_revenue'] = (time.time() - start_time) * 1e6
 
         # Logging Iteration results
@@ -893,6 +898,38 @@ def rcm_binary_search(num_prods, C, rcm, meta):
         #       ' num iters:',
         #       count)
     return best_set_revenue, best_set, time_log, solve_log
+
+# --------------------BinSearch Compare Step: Cubic Integer Programming -------------------
+def binSearchCompare_tcm_exact(num_prods,C,rcm,meta,K):
+    time_log = {}
+
+    #write Datafile
+    start_time = time.time()
+    bonmin_write_model_data_file(rcm, meta, k_val = K)
+    time_log['write_bonmin_data_file'] = (time.time() - start_time) * 1e6
+
+    data_filepath = meta['data_filepath']
+    # create an instance
+    start_time = time.time()
+    instance = tcm_model_compstep.create_instance(data_filepath)
+    time_log['create_bonmin_instance'] = (time.time() - start_time) * 1e6
+
+    #solve bonmin instance
+    start_time = time.time()
+    opt.solve(instance, tee=True)
+    time_log['solve_bonmin_instance'] = (time.time() - start_time) * 1e6
+
+    #postprocess
+    start_time = time.time()
+    revSet = []
+    for i in instance.x:
+        if instance.x[i].value == 1.:
+            revSet.append(i)
+    pseudoRev = instance.revenue.expr()
+    time_log['postprocess_solution'] = (time.time() - start_time) * 1e6
+
+    return pseudoRev, revSet, time_log
+
 
 
 # --------------------BinSearch Compare Step: Quadratic Integer Programming -------------------
@@ -1925,7 +1962,7 @@ def tcm_bonmin_mnlip(num_prods, C, rcm, meta=None):
     return maxRev, maxSet, timeTaken, solve_log
 
 
-def bonmin_write_model_data_file(rcm, meta):
+def bonmin_write_model_data_file(rcm, meta, k_val=None):
     prices = rcm['p'][1:]  # removing p0
     n = len(rcm['v']) - 1
     # open file handle
@@ -1934,6 +1971,8 @@ def bonmin_write_model_data_file(rcm, meta):
         # Write N, v0
         f.write(f"param N := {n};\n")
         f.write(f"param v0 := {rcm['v'][0]};\n")
+        if k_val is not None:
+            f.write(f"param K := {k_val};\n")
 
         # write prices
         f.write(f"param r :=\n")
@@ -2037,7 +2076,7 @@ def rcm_calc_revenue(given_set, p, rcm, num_prods):
         den1 = np.sum([rcm['v'][xr] for xr in given_set])
         num2 = np.sum(
                 [(rcm['p'][given_set[xi]] + rcm['p'][given_set[xj]]) * (
-                rcm['v2'][tuple([given_set[xi], given_set[xj]])])
+                    rcm['v2'][tuple([given_set[xi], given_set[xj]])])
                  for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])
         den2 = np.sum([(rcm['v2'][tuple([given_set[xi], given_set[xj]])])
                        for xi in range(len(given_set)) for xj in range(xi + 1, len(given_set))])

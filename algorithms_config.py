@@ -140,6 +140,16 @@ BINSEARCH_QIP_MTHREAD_HEURISTIC_CONSTRAINED = {
 }
 
 """
+Binary Search with Solving a Cubic Integer Programming using bonmin module for three choice model
+"""
+BINSEARCH_TCM_BONMIN_EXACT = {
+    'solution_id': 'binSearch_tcm_bonmin_exact',
+    'algo': 'binary-search',
+    'comparison_function': 'tcm-exact',
+    'data_filepath': 'tmp/tcm_binsearch_datafile.dat'
+}
+
+"""
 Binary Search with Solving a Quadratic Integer Programming using cplex module
 """
 BINSEARCH_QIP_EXACT = {
