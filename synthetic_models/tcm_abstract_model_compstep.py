@@ -25,7 +25,6 @@ model.r = Param(model.I, within=PositiveReals)
 # Create Variable X's for selecting a product
 model.x = Var(model.I, within=Binary)
 
-
 def objective_rule(model):
     # n=model.N
     objective_expr = sum((model.v1[i] * (model.r[i] - model.K) * model.x[i] for i in model.I))

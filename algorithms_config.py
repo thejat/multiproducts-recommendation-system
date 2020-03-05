@@ -139,6 +139,17 @@ BINSEARCH_QIP_MTHREAD_HEURISTIC_CONSTRAINED = {
     'MQLib_dir': '../MQLib/'
 }
 
+# """
+# Binary Search Improved with Solving a Cubic Integer Programming using bonmin module for three choice model
+# """
+# BINSEARCHIMPROVED_TCM_BONMIN_EXACT = {
+#     'solution_id': 'binSearchImproved_tcm_bonmin_exact',
+#     'algo': 'binary-search-improved',
+#     'comparison_function': 'tcm-exact',
+#     'data_filepath': 'tmp/tcm_binsearch_datafile.dat'
+# }
+
+
 """
 Binary Search with Solving a Cubic Integer Programming using bonmin module for three choice model
 """

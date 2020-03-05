@@ -905,6 +905,13 @@ def binSearchCompare_tcm_exact(num_prods,C,rcm,meta,K):
 
     #write Datafile
     start_time = time.time()
+    # if 'selected_products' in meta.keys():
+    #     selected_product_idx_arr = np.zeros(num_prods)
+    #     selected_product_idx_arr[meta['selected_products']] = 1
+    # if 'removed_products' in meta.keys():
+    #     selected_product_idx_arr = np.zeros(num_prods)
+    #     selected_product_idx_arr[meta['removed_products']] = 1
+
     bonmin_write_model_data_file(rcm, meta, k_val = K)
     time_log['write_bonmin_data_file'] = (time.time() - start_time) * 1e6
 
@@ -1985,6 +1992,18 @@ def bonmin_write_model_data_file(rcm, meta, k_val=None):
         for i in range(n):
             f.write(f"{i + 1} {rcm['v'][i + 1]}\n")
         f.write(";\n")
+
+        #write selected, removed products
+        # if selected_products is not None:
+        #     f.write(f"param selected_products :=\n")
+        #     for i in range(n):
+        #         f.write(f"{i + 1} {selected_products[i]}\n")
+        #     f.write(";\n")
+        # if removed_products is not None:
+        #     f.write(f"param removed_products :=\n")
+        #     for i in range(n):
+        #         f.write(f"{i + 1} {removed_products[i]}\n")
+        #     f.write(";\n")
 
         # write v2s
         nonzero_key_counts = [key for key in rcm['v2'].keys() if rcm['v2'][key] > 0]

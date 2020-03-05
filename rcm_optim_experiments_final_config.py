@@ -25,172 +25,184 @@ medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
-    'small': {
-        'price_range': [1000],
-        'num_prods': small_array,
-        'repeat_count': RC,
+    'revenue_ordered_testing' : {
+        'price_range'   : [10000],
+        'num_prods'     : [1000],
+        'repeat_count'  : 2 * RC,
+        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
+    },
+    'small'                   : {
+        'price_range'   : [1000],
+        'num_prods'     : small_array,
+        'repeat_count'  : RC,
         'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'tafeng_small': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'tafeng_small'            : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
-                           BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
+                              BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
+                              NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'uci_small': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'uci_small'               : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
-                           BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
+                              BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
+                              NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'constrained_small': {
-        'price_range': [1000],
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_small'       : {
+        'price_range'                        : [1000],
+        'num_prods'                          : small_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 5,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED,
-                           REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list'                     : [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED,
+                                                MIXED_IP_CONSTRAINED,
+                                                REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
     'constrained_tafeng_small': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+        'num_prods'                          : small_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 5,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED,
-                           REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/tafeng.pkl',
+        'algorithm_list'                     : [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED,
+                                                MIXED_IP_CONSTRAINED,
+                                                REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_uci_small': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_uci_small'   : {
+        'num_prods'                          : small_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 5,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED, MIXED_IP_CONSTRAINED,
-                           REVENUE_ORDERED_CONSTRAINED,BINSEARCH_QIP_EXACT_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/uci.pkl',
+        'algorithm_list'                     : [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED,
+                                                MIXED_IP_CONSTRAINED,
+                                                REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     }
 })
 
 mnl_set_dict = {
-    'mnl_revenue_ordered_uci': {
-        'price_range': [1000],
-        'num_prods': small_array + medium_array + large_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'mnl_revenue_ordered_uci'       : {
+        'price_range'      : [1000],
+        'num_prods'        : small_array + medium_array + large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
-        'is_mnl_model': True,
-        'gt_model': 'rcm',
-        'algorithm_list': [MNL_REVENUE_ORDERED]
+        'is_mnl_model'     : True,
+        'gt_model'         : 'rcm',
+        'algorithm_list'   : [MNL_REVENUE_ORDERED]
     },
-    'mnl_uci_gt_rcm_small_medium': {
-        'price_range': [1000],
-        'num_prods': small_array + medium_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'mnl_uci_gt_rcm_small_medium'   : {
+        'price_range'      : [1000],
+        'num_prods'        : small_array + medium_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'mnl_uci_gt_rcm_large': {
-        'price_range': [1000],
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'mnl_uci_gt_rcm_large'          : {
+        'price_range'      : [1000],
+        'num_prods'        : large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
     },
-    'mnl_revenue_ordered_tafeng': {
-        'price_range': [1000],
-        'num_prods': small_array + medium_array + large_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'mnl_revenue_ordered_tafeng'    : {
+        'price_range'      : [1000],
+        'num_prods'        : small_array + medium_array + large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng_mnl.pkl',
-        'is_mnl_model': True,
-        'gt_model': 'rcm',
-        'algorithm_list': [MNL_REVENUE_ORDERED]
+        'is_mnl_model'     : True,
+        'gt_model'         : 'rcm',
+        'algorithm_list'   : [MNL_REVENUE_ORDERED]
     },
     'mnl_tafeng_gt_rcm_small_medium': {
-        'price_range': [1000],
-        'num_prods': small_array + medium_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+        'price_range'      : [1000],
+        'num_prods'        : small_array + medium_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'mnl_tafeng_gt_rcm_large': {
-        'price_range': [1000],
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'mnl_tafeng_gt_rcm_large'       : {
+        'price_range'      : [1000],
+        'num_prods'        : large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
     }
 }
 
 tcm_set_dict = {
-    'tcm_bonmin_tafeng': {
-        'num_prods': small_array,
-        'repeat_count': RC,
+    'tcm_bonmin_tafeng'      : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
         'parent_model_file': 'synthetic_models/models/tafeng_tcm.pkl',
-        'is_tcm_model': True,
-        'prob_v0': 0.3,
-        'algorithm_list': [BINSEARCH_TCM_BONMIN_EXACT,TCM_BONMIN_MNLIP]
+        'is_tcm_model'     : True,
+        'prob_v0'          : 0.3,
+        'algorithm_list'   : [BINSEARCH_TCM_BONMIN_EXACT, TCM_BONMIN_MNLIP]
     },
-    'tafeng_small_gt_tcm': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
-        'gt_model': 'tcm',
+    'tafeng_small_gt_tcm'    : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
+        'gt_model'         : 'tcm',
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_EXACT]
     },
     'tafeng_small_gt_tcm_mnl': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/tafeng_mnl.pkl',
-        'is_mnl_model': True,
-        'gt_model': 'tcm',
-        'algorithm_list': [MNL_REVENUE_ORDERED]
+        'is_mnl_model'     : True,
+        'gt_model'         : 'tcm',
+        'algorithm_list'   : [MNL_REVENUE_ORDERED]
     },
-    'tcm_bonmin_uci': {
-        'num_prods': small_array,
-        'repeat_count': RC,
+    'tcm_bonmin_uci'         : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
         'parent_model_file': 'synthetic_models/models/uci_tcm.pkl',
-        'is_tcm_model': True,
-        'prob_v0': 0.3,
-        'algorithm_list': [BINSEARCH_TCM_BONMIN_EXACT,TCM_BONMIN_MNLIP]
+        'is_tcm_model'     : True,
+        'prob_v0'          : 0.3,
+        'algorithm_list'   : [BINSEARCH_TCM_BONMIN_EXACT, TCM_BONMIN_MNLIP]
     },
-    'uci_small_gt_tcm': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
-        'gt_model': 'tcm',
+    'uci_small_gt_tcm'       : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
+        'gt_model'         : 'tcm',
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'uci_small_gt_tcm_mnl': {
-        'num_prods': small_array,
-        'repeat_count': RC,
-        'prob_v0': 0.3,
+    'uci_small_gt_tcm_mnl'   : {
+        'num_prods'        : small_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : 0.3,
         'parent_model_file': 'synthetic_models/models/uci_mnl.pkl',
-        'is_mnl_model': True,
-        'gt_model': 'tcm',
-        'algorithm_list': [MNL_REVENUE_ORDERED]
+        'is_mnl_model'     : True,
+        'gt_model'         : 'tcm',
+        'algorithm_list'   : [MNL_REVENUE_ORDERED]
     }
 }
 
@@ -198,61 +210,64 @@ experiment_set_dict.update(tcm_set_dict)
 
 medium_set_dict = {
     # Medium Experiments Config
-    'medium': {
-        'price_range': [1000],
-        'num_prods': medium_array,
-        'repeat_count': RC,
+    'medium'                   : {
+        'price_range'   : [1000],
+        'num_prods'     : medium_array,
+        'repeat_count'  : RC,
         'algorithm_list': [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'tafeng_medium': {
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'tafeng_medium'            : {
+        'num_prods'        : medium_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
+                              NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'uci_medium': {
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'uci_medium'               : {
+        'num_prods'        : medium_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                           NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
+                              NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'constrained_medium': {
-        'price_range': [1000],
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_medium'       : {
+        'price_range'                        : [1000],
+        'num_prods'                          : medium_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
         # , BINSEARCH_QIP_EXACT_CONSTRAINED]
     },
     'constrained_tafeng_medium': {
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+        'num_prods'                          : medium_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                           BINSEARCH_QIP_EXACT_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/tafeng.pkl',
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                BINSEARCH_QIP_EXACT_CONSTRAINED]
     },
-    'constrained_uci_medium': {
-        'num_prods': medium_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_uci_medium'   : {
+        'num_prods'                          : medium_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED,
-                           BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                           BINSEARCH_QIP_EXACT_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/uci.pkl',
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED,
+                                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                BINSEARCH_QIP_EXACT_CONSTRAINED]
     }
 }
 
@@ -261,10 +276,10 @@ experiment_set_dict.update(medium_set_dict)
 v0_levels = range(10, 100, 20)
 v0_configs = {
     f'v0_{xr}_synthetic': {
-        'price_range': [1000],
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': xr / 100,
+        'price_range'   : [1000],
+        'num_prods'     : large_array,
+        'repeat_count'  : RC,
+        'prob_v0'       : xr / 100,
         'algorithm_list': [NOISYBINSEARCHIMPROVED_QIP_MTHREAD, NOISYBINSEARCH_QIP_MTHREAD]
     }
     for xr in v0_levels
@@ -289,55 +304,58 @@ experiment_set_dict.update(v0_configs)
 
 large_set_dict = {
     # Large Experiments Config
-    'large': {
-        'price_range': [1000],
-        'num_prods': large_array,
-        'repeat_count': RC,
+    'large'                   : {
+        'price_range'   : [1000],
+        'num_prods'     : large_array,
+        'repeat_count'  : RC,
         'algorithm_list': [NOISYBINSEARCH_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
                            BINSEARCHIMPROVED_QIP_EXACT, REVENUE_ORDERED]
     },
-    'constrained_large': {
-        'price_range': [1000],
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_large'       : {
+        'price_range'                        : [1000],
+        'num_prods'                          : large_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'tafeng_large': {
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'tafeng_large'            : {
+        'num_prods'        : large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [NOISYBINSEARCH_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
-                           BINSEARCHIMPROVED_QIP_EXACT, REVENUE_ORDERED]
+        'algorithm_list'   : [NOISYBINSEARCH_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
+                              BINSEARCHIMPROVED_QIP_EXACT, REVENUE_ORDERED]
     },
-    'uci_large': {
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'uci_large'               : {
+        'num_prods'        : large_array,
+        'repeat_count'     : RC,
+        'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [NOISYBINSEARCH_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
-                           BINSEARCHIMPROVED_QIP_EXACT, REVENUE_ORDERED]
+        'algorithm_list'   : [NOISYBINSEARCH_QIP_MTHREAD, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
+                              BINSEARCHIMPROVED_QIP_EXACT, REVENUE_ORDERED]
     },
     'constrained_tafeng_large': {
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+        'num_prods'                          : large_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/tafeng.pkl',
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_uci_large': {
-        'num_prods': large_array,
-        'repeat_count': RC,
-        'prob_v0': None,
+    'constrained_uci_large'   : {
+        'num_prods'                          : large_array,
+        'repeat_count'                       : RC,
+        'prob_v0'                            : None,
         # 'max_assortment_size': 20,
         'max_assortment_size_num_prods_ratio': 0.3,
-        'parent_model_file': 'synthetic_models/models/uci.pkl',
-        'algorithm_list': [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED, NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'parent_model_file'                  : 'synthetic_models/models/uci.pkl',
+        'algorithm_list'                     : [REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+                                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     }
 }
 
