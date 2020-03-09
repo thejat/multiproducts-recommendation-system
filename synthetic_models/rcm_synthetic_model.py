@@ -4,7 +4,7 @@ from synthetic_models.utils import generate_instance
 
 def generate_two_restricted_choice_model(price_range, prod, scaling_v0=1, scaling_v2=1, prob_v0=None):
     # p, v = generate_instance(price_range, prod, genMethod=None, iterNum=None)
-    p = price_range * np.random.beta(1, 1, prod)
+    p = price_range * np.random.beta(1, 5, prod)
     p = np.insert(p, 0, 0)
 
     # v = np.random.beta(1, 50, prod + 1) + 1e-3
