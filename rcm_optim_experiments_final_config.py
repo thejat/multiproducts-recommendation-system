@@ -25,22 +25,36 @@ medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
-    'iowa': {
+    'iowa'                                      : {
         'num_prods'        : [460],
         'repeat_count'     : 5,
         'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/iowa.pkl',
-        'algorithm_list'   : [REVENUE_ORDERED,NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
+        'algorithm_list'   : [REVENUE_ORDERED, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
                               BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'revenue_ordered_testing_vi_0_vij_b11': {
+    'revenue_ordered_testing_vi_0_vij_b11_v0_0' : {
         'price_range'   : [10000],
         'num_prods'     : [800],
-        'repeat_count'  : 2,
+        'repeat_count'  : 4 * RC,
+        'prob_v0'       : None,
+        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
+    },
+    'revenue_ordered_testing_vi_0_vij_b11_v0_30': {
+        'price_range'   : [10000],
+        'num_prods'     : [800],
+        'repeat_count'  : 4 * RC,
         'prob_v0'       : 0.3,
         'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'small'                       : {
+    'revenue_ordered_testing_vi_0_vij_b11_v0_90': {
+        'price_range'   : [10000],
+        'num_prods'     : [800],
+        'repeat_count'  : 4 * RC,
+        'prob_v0'       : 0.9,
+        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
+    },
+    'small'                                     : {
         'price_range'   : [1000],
         'num_prods'     : small_array,
         'repeat_count'  : RC,
@@ -48,7 +62,7 @@ experiment_set_dict = collections.OrderedDict({
                            BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'tafeng_small'                : {
+    'tafeng_small'                              : {
         'num_prods'        : small_array,
         'repeat_count'     : RC,
         'prob_v0'          : None,
@@ -57,7 +71,7 @@ experiment_set_dict = collections.OrderedDict({
                               BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                               NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'uci_small'                   : {
+    'uci_small'                                 : {
         'num_prods'        : small_array,
         'repeat_count'     : RC,
         'prob_v0'          : None,
@@ -66,7 +80,7 @@ experiment_set_dict = collections.OrderedDict({
                               BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                               NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
-    'constrained_small'           : {
+    'constrained_small'                         : {
         'price_range'                        : [1000],
         'num_prods'                          : small_array,
         'repeat_count'                       : RC,
@@ -79,7 +93,7 @@ experiment_set_dict = collections.OrderedDict({
                                                 BINSEARCH_QIP_MTHREAD_CONSTRAINED,
                                                 NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_tafeng_small'    : {
+    'constrained_tafeng_small'                  : {
         'num_prods'                          : small_array,
         'repeat_count'                       : RC,
         'prob_v0'                            : None,
@@ -92,7 +106,7 @@ experiment_set_dict = collections.OrderedDict({
                                                 BINSEARCH_QIP_MTHREAD_CONSTRAINED,
                                                 NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
     },
-    'constrained_uci_small'       : {
+    'constrained_uci_small'                     : {
         'num_prods'                          : small_array,
         'repeat_count'                       : RC,
         'prob_v0'                            : None,
