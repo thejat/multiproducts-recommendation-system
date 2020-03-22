@@ -4,20 +4,28 @@ from synthetic_models.utils import generate_instance
 
 def generate_two_restricted_choice_model(price_range, prod, scaling_v0=1, scaling_v2=1, prob_v0=None):
     # p, v = generate_instance(price_range, prod, genMethod=None, iterNum=None)
-    p = price_range * np.random.beta(1, 5, prod)
+    # p = np.random.randint(0,price_range,prod)
+    p = np.random.beta(2,10,prod) * price_range
+    p.sort()
     p = np.insert(p, 0, 0)
+    prod_mid_count = prod // 2
 
-    # v = np.random.beta(1, 50, prod + 1) + 1e-3
-    v = np.zeros(prod + 1)+1e-8
-    # v = scaling_v0 * v
-
+    v = np.random.beta(1, 1, prod + 1)
+    # v = np.concatenate([np.random.beta(10, 1, prod_mid_count), np.random.beta(1, 10, prod+1-prod_mid_count)])
     v2 = {}
+
     for i in range(1, prod + 1):
         for j in range(i + 1, prod + 1):
-            # v2[(i, j)] = np.random.rand() * scaling_v2
-            # v2[(i, j)] = np.random.beta(50, 1)
-            v2[(i, j)] = np.random.beta(1, 1)
-            v2[(j, i)] = v2[(i, j)]
+            if((i>prod_mid_count) & (j>prod_mid_count)):
+                v2[(i, j)] = np.random.beta(1, 10)
+                v2[(j, i)] = v2[(i, j)]
+            # elif((i<=prod_mid_count) & (j<=prod_mid_count)):
+            else:
+                v2[(i, j)] = np.random.beta(10, 1)
+                v2[(j, i)] = v2[(i, j)]
+            # else:
+            #     v2[(i, j)] = np.random.beta(1, 10)
+            #     v2[(j, i)] = v2[(i, j)]
     # Set V[0] such that prob v0 is prob_v0
     if prob_v0 is not None:
         v_sum = sum(v) + sum(v2.values()) - v[0]

@@ -25,42 +25,6 @@ medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
-    'revenue_ordered_testing_small_price_range': {
-        'price_range'   : [20],
-        'num_prods'     : [400],
-        'repeat_count'  : 4,
-        'prob_v0'       : None,
-        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
-    },
-    'iowa'                                      : {
-        'num_prods'        : [460],
-        'repeat_count'     : 5,
-        'prob_v0'          : None,
-        'parent_model_file': 'synthetic_models/models/iowa.pkl',
-        'algorithm_list'   : [REVENUE_ORDERED, NOISYBINSEARCHIMPROVED_QIP_MTHREAD,
-                              BINSEARCHIMPROVED_QIP_EXACT]
-    },
-    'revenue_ordered_testing_vi_0_vij_b11_v0_0_p_b15' : {
-        'price_range'   : [10000],
-        'num_prods'     : [800],
-        'repeat_count'  : 4 * RC,
-        'prob_v0'       : None,
-        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
-    },
-    'revenue_ordered_testing_vi_0_vij_b11_v0_30_p_b15': {
-        'price_range'   : [10000],
-        'num_prods'     : [800],
-        'repeat_count'  : 4 * RC,
-        'prob_v0'       : 0.3,
-        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
-    },
-    'revenue_ordered_testing_vi_0_vij_b11_v0_90_p_b15': {
-        'price_range'   : [10000],
-        'num_prods'     : [800],
-        'repeat_count'  : 4 * RC,
-        'prob_v0'       : 0.9,
-        'algorithm_list': [REVENUE_ORDERED, BINSEARCHIMPROVED_QIP_EXACT]
-    },
     'small'                                     : {
         'price_range'   : [1000],
         'num_prods'     : small_array,
