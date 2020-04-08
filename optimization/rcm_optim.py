@@ -7,7 +7,7 @@ from itertools import combinations
 from itertools import chain
 # from sklearn.neighbors import LSHForest
 from sklearn.neighbors import NearestNeighbors
-from synthetic_models.utils import set_char_from_ast, ast_from_set_char
+from synthetic_models.utils import set_char_from_ast, ast_from_set_char, signal_handler
 import cplex
 import docplex.mp.model as cpx
 from threading import Thread, Lock
@@ -21,6 +21,8 @@ from synthetic_models.tcm_abstract_model_compstep import model as tcm_model_comp
 from pyomo.environ import *
 import functools
 import multiprocessing as mp
+import signal
+
 
 opt = SolverFactory('bonmin')
 
@@ -1038,6 +1040,7 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
     p.set_results_stream(None)
     start_time = time.time()
     st = time.time()
+    p.parameters.timelimit.set(900.0)
     p.solve()
     logger.info(f"time taken in solving QIP {(time.time() - start_time) * 1e6} microsecs")
     time_log['solve_qip'] = (time.time() - start_time) * 1e6
@@ -1056,6 +1059,7 @@ def binSearchCompare_qip_exact(num_prods, C, rcm, meta, K):
             revSet.append(int(i + 1))
     logger.info(f"time taken in postprocessing {(time.time() - start_time) * 1e6} microsecs")
     time_log['qip_postprocessing'] = (time.time() - start_time) * 1e6
+
     # logger.info("\t\tQIP pseudo rev:",pseudoRev)
     # logger.info("\t\tQIP set:", revSet)
     return pseudoRev, revSet, time_log
@@ -2125,3 +2129,4 @@ def tcm_calc_revenue(subset, tcm):
                         ((not i == j) & (not j == k) & (not i == k))]) * (1 / 6)
     print(rev_num, rev_den)
     return rev_num / rev_den
+

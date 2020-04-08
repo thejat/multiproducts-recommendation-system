@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from collections.abc import Iterable
+import signal
 
 def set_char_from_ast(ast, prod):
     set_char_vector = [0] * prod
@@ -82,3 +83,6 @@ def generate_instance_general(price_range, prod, C=None, genMethod=None, iterNum
     p, v = generate_instance(price_range, prod, genMethod, iterNum)
 
     return p, v, feasibles, int(C), prod
+
+def signal_handler(signum, frame):
+    raise Exception("Timed out!")

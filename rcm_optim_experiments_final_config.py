@@ -29,7 +29,7 @@ experiment_set_dict = collections.OrderedDict({
         'price_range'   : [1000],
         'num_prods'     : small_array,
         'repeat_count'  : RC,
-        'algorithm_list': [ADXOPT1_PRODUCTS, ADXOPT2_SETS, MIXED_IP,
+        'algorithm_list': [ADXOPT1_PRODUCTS, MIXED_IP,
                            BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
                            NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
     },
