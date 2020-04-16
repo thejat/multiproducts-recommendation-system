@@ -45,14 +45,14 @@ experiment_set_dict = collections.OrderedDict({
         'num_prods'           : small_array+medium_array,
         'repeat_count'        : RC,
         'Hset_multiplier_list': [0.25],
-        'algorithm_list'      : [ADXOPT2_SETS, ADXOPT1_PRODUCTS, MIXED_IP, REVENUE_ORDERED]
+        'algorithm_list'      : [ADXOPT1_PRODUCTS, MIXED_IP, REVENUE_ORDERED]
     },
     'tafeng_all': {
         'parent_model_file'   : 'synthetic_models/models/ucm_tafeng.pkl',
         'num_prods'           : small_array,
         'repeat_count'        : RC,
         'Hset_multiplier_list': [0.25],
-        'algorithm_list'      : [ADXOPT2_SETS, ADXOPT1_PRODUCTS, MIXED_IP, REVENUE_ORDERED]
+        'algorithm_list'      : [ADXOPT1_PRODUCTS, MIXED_IP, REVENUE_ORDERED]
     }
 })
 
