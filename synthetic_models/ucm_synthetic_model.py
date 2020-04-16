@@ -32,6 +32,39 @@ def generate_universal_choice_model(price_range, prod, n_Hset_count, maxHset_siz
             'v': v, 'max_Hset_size': maxHset_size, 'max_purchase_size': max_purchase_size}
 
 
+def generate_derived_ucm_choice_model(parent_ucm_model, num_products, maxHset_size=2, max_purchase_size=2):
+    #select products
+    product_ids = np.array(list(parent_ucm_model.prices.keys()))
+    selected_products_ids = np.random.choice(product_ids, num_products, replace=False)
+
+    #get p,v values
+    new_ucm_model = {'product_ids':selected_products_ids}
+    prices = [0] * (len(selected_products_ids) + 1)
+    v = [0] * (len(selected_products_ids) + 1)
+    for i, product_id in enumerate(selected_products_ids):
+        prices[i + 1] = parent_ucm_model.prices[product_id]
+        v[i + 1] = parent_ucm_model.probs[product_id]
+    v[0] = np.random.beta(1, 5) * max(v)
+
+    #Create Hsets and weights
+    Hsets = []
+    W = collections.OrderedDict({})
+
+    for subset in parent_ucm_model.H.keys():
+        if ((subset[0] in selected_products_ids) and (subset[1] in selected_products_ids)):
+            new_prodid0 = np.argwhere(selected_products_ids==subset[0])[0][0]+1
+            new_prodid1 = np.argwhere(selected_products_ids == subset[1])[0][0] + 1
+            set_char_vector = set_char_from_ast((new_prodid0,new_prodid1), num_products)
+            Hsets.append(set_char_vector)
+            W[set_char_vector]=parent_ucm_model.H[subset]
+
+    gamma, prob_unnormalized = get_gamma(max_purchase_size, num_products, v, Hsets, W)
+    probs, probs_select_size = get_probabilities_given_gamma(max_purchase_size, num_products, gamma, prob_unnormalized, v)
+
+    return {'probs': probs, 'probs_select_size': probs_select_size, 'gamma': gamma, 'Hsets': Hsets, 'W': W, 'p': prices,
+            'v'    : v, 'max_Hset_size': maxHset_size, 'max_purchase_size': max_purchase_size}
+
+
 def get_H_sets(prod, n_Hset_count, max_Hset_size, start_time, include_no_purchase):
     nHsets = 0
     Hsets = []

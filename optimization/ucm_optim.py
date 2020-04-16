@@ -523,7 +523,7 @@ def ucm_calc_revenue_old(given_set, p, ucm, prod):
 def ucm_calc_revenue(given_set, p, ucm, prod, HSet_idx=None, W_set=None):
     start_time = time.time()
     v2 = lambda i, j: ucm['v'][i] * ucm['v'][j] * np.exp(W_set[tuple(sorted([i - 1, j - 1]))]) if (
-            tuple(sorted([i - 1, j - 1])) in HSet_idx) else ucm['v'][i] * ucm['v'][j]
+            tuple(sorted([i - 1, j - 1])) in ([] if HSet_idx is None else HSet_idx)) else ucm['v'][i] * ucm['v'][j]
 
     pos0 = np.zeros(len(ucm['v']) - 1)
     if (tuple(pos0) in ucm['Hsets']):
