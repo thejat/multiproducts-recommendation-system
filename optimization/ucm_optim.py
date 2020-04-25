@@ -187,6 +187,7 @@ def ucm_mixed_ip(num_prods, C, ucm, meta=None):
 
     # Solve given model
     opt_model.maximize(objective)
+    opt_model.set_time_limit(900)
     # TODO: Fixing Url and API Key here, Need to get it from meta
     # meta['url'] = "https://api-oaas.docloud.ibmcloud.com/job_manager/rest/v1/"
     # meta['key'] = "api_4e360631-3fd5-449b-b7a2-3449aca36a3b"
