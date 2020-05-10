@@ -25,6 +25,13 @@ large_array = list(range(large_lb, large_ub, large_delta))
 
 experiment_set_dict = collections.OrderedDict({
     # Small Experiments Config
+    'rev_ordered_small': {
+        'price_range'         : [1000],
+        'num_prods'           : small_array,
+        'repeat_count'        : RC,
+        'Hset_multiplier_list': [0, 0.25, 0.5, 1],
+        'algorithm_list'      : [REVENUE_ORDERED]
+    },
     'small': {
         'price_range': [1000],
         'num_prods': small_array,

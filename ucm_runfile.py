@@ -42,5 +42,5 @@ for experiment_id in experiment_id_list:
                                                 repeat_count=repeat_count,
                                                 output_dir=solution_dir)
     df_results = pd.DataFrame.from_dict(dict(enumerate(experiment_summary)), orient='index')
-    df_results.to_csv(f"{summary_dir}/solution_summary.csv", index=False)
+    df_results.to_csv(f"{summary_dir}/solution_summary.csv", index=False,sep='|')
     print(f"-----Processed Experiment Set {experiment_id}--------")
