@@ -28,10 +28,10 @@ def run_rcm_experiment(traindatafiles, testdatafiles, results_dir):
     df_results.columns = ['train_likelihood', 'test_likelihood']
     df_results.to_csv(f'{results_dir}/rcm_results.csv')
 
-
+#
 # univ_datasets = ['bakery.txt', 'instacart-5-25.txt', 'kosarak.txt', 'lastfm-genres.txt', 'walmart-depts.txt',
 #                  'walmart-items.txt']
-# data_dir = '../data'
+# data_dir = '../../data'
 # results_dir = '../results/ucm_results'
 # traindatafiles = [f'{data_dir}/train_data_{dataset}' for dataset in univ_datasets]
 # testdatafiles = [f'{data_dir}/test_data_{dataset}' for dataset in univ_datasets]

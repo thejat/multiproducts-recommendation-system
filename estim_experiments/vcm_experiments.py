@@ -45,3 +45,11 @@ def run_vcm_experiment(traindatafile, testdatafile, results_dir):
 
     df_results = pd.DataFrame.from_dict(likelihoods, orient='index')
     df_results.to_csv(f'{results_dir}/{traindatafile.split("train")[-1]}')
+
+univ_datasets = ['yc-cats.txt']
+data_dir = '../../data'
+results_dir = '../results/ucm_results'
+traindatafiles = [f'{data_dir}/train_data_{dataset}' for dataset in univ_datasets]
+testdatafiles = [f'{data_dir}/test_data_{dataset}' for dataset in univ_datasets]
+
+run_vcm_experiment(traindatafiles, testdatafiles, results_dir)
