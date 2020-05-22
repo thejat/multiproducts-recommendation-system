@@ -29,10 +29,3 @@ def run_vmnl_experiment(traindatafiles, testdatafiles, results_dir):
     df_results.columns = ['num_params','train_likelihood', 'test_likelihood']
     df_results.to_csv(f'{results_dir}/vmnl_results.csv')
 
-
-data_dir = '../data'
-variable_datasets = ['yc-items.txt']
-traindatafiles = [f'{data_dir}/train_data_{dataset}' for dataset in variable_datasets]
-testdatafiles = [f'{data_dir}/test_data_{dataset}' for dataset in variable_datasets]
-
-run_vmnl_experiment(traindatafiles, testdatafiles, 'results/vmnl_estim')
