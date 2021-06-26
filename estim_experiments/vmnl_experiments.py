@@ -3,6 +3,7 @@ import pandas as pd
 from model_learning import vmnl_model as vmnl
 import time
 
+
 def run_vmnl_experiment(traindatafiles, testdatafiles, results_dir):
     likelihoods = {}
     for traindatafile, testdatafile in zip(traindatafiles, testdatafiles):
@@ -23,9 +24,9 @@ def run_vmnl_experiment(traindatafiles, testdatafiles, results_dir):
 
         likelihoods[f'{traindatafile.split("train_data_")[-1]}'] = [num_parameters, train_likelihood,
                                                                     test_likelihood]
-        print(f'{traindatafile.split("train")}:: #parameters: {num_parameters},training_time: {training_time}, testing_time: {testing_time}'
-              f'train_likelihood: {train_likelihood}, test_likelihoods: {test_likelihood}')
+        print(
+            f'{traindatafile.split("train")}:: #parameters: {num_parameters},training_time: {training_time}, testing_time: {testing_time}'
+            f'train_likelihood: {train_likelihood}, test_likelihoods: {test_likelihood}')
     df_results = pd.DataFrame.from_dict(likelihoods, orient='index')
-    df_results.columns = ['num_params','train_likelihood', 'test_likelihood']
+    df_results.columns = ['num_params', 'train_likelihood', 'test_likelihood']
     df_results.to_csv(f'{results_dir}/vmnl_results.csv')
-

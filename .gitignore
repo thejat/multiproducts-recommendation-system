@@ -15,5 +15,5 @@ tmp*
 .idea/
 data/
 *.pyc
-__pycache__/*
+**/__pycache__/**
 MQLib

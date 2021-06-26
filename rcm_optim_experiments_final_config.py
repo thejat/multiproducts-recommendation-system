@@ -71,11 +71,12 @@ experiment_set_dict = collections.OrderedDict({
         'max_assortment_size': 5,
         # 'max_assortment_size_num_prods_ratio': 0.3,
         'parent_model_file'  : 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list'     : [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED,
-                                MIXED_IP_CONSTRAINED,
-                                REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
-                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        # 'algorithm_list'     : [ADXOPT1_PRODUCTS_CONSTRAINED, ADXOPT2_SETS_CONSTRAINED,
+        #                         MIXED_IP_CONSTRAINED,
+        #                         REVENUE_ORDERED_CONSTRAINED, BINSEARCH_QIP_EXACT_CONSTRAINED,
+        #                         BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+        #                         NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED]
+        'algorithm_list'   : [REVENUE_ORDERED_CONSTRAINED]
     },
     'constrained_uci_small'   : {
         'num_prods'          : small_array,
@@ -216,8 +217,9 @@ medium_set_dict = {
         'repeat_count'     : RC,
         'prob_v0'          : None,
         'parent_model_file': 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list'   : [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
-                              NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        # 'algorithm_list'   : [BINSEARCH_QIP_EXACT, NOISYBINSEARCH_QIP_MTHREAD, REVENUE_ORDERED,
+        #                       NOISYBINSEARCHIMPROVED_QIP_MTHREAD, BINSEARCHIMPROVED_QIP_EXACT]
+        'algorithm_list'   : [REVENUE_ORDERED]
     },
     'uci_medium'               : {
         'num_prods'        : medium_array,
@@ -246,10 +248,11 @@ medium_set_dict = {
         'max_assortment_size': 20,
         # 'max_assortment_size_num_prods_ratio': 0.3,
         'parent_model_file'  : 'synthetic_models/models/tafeng.pkl',
-        'algorithm_list'     : [REVENUE_ORDERED_CONSTRAINED,
-                                BINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                                NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
-                                BINSEARCH_QIP_EXACT_CONSTRAINED]
+        # 'algorithm_list'     : [REVENUE_ORDERED_CONSTRAINED,
+        #                         BINSEARCH_QIP_MTHREAD_CONSTRAINED,
+        #                         NOISYBINSEARCH_QIP_MTHREAD_CONSTRAINED,
+        #                         BINSEARCH_QIP_EXACT_CONSTRAINED]
+        'algorithm_list'   : [REVENUE_ORDERED_CONSTRAINED]
     },
     'constrained_uci_medium'   : {
         'num_prods'          : medium_array,
