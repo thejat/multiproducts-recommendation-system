@@ -1,5 +1,5 @@
 from pyomo.environ import *
-
+import time
 # infinity = float('inf')
 
 model = AbstractModel()
@@ -25,25 +25,36 @@ model.x = Var(model.I, within=Binary)
 
 def objective_rule(model):
     # n=model.N
+    start_time=time.time()
     objective_expr_num = sum((model.v1[i] * model.r[i] * model.x[i] for i in model.I))
-    # print("Step1 NUM:",objective_expr_num)
+    print("Step v1 num in %.3f secs"%(time.time()-start_time))
+    start_time = time.time()
     objective_expr_num += 0.5 * sum(
         (model.v2[i, j] * (model.r[i] + model.r[j]) * model.x[i] * model.x[j] for i in model.I for j in model.I if
          (not (i == j))))
+    print("Step v2 num in %.3f secs"% (time.time() - start_time))
+    start_time = time.time()
     # print("Step2 NUM:",objective_expr_num)
     objective_expr_num += (1 / 6) * sum(
         (model.v3[i, j, k] * (model.r[i] + model.r[j] + model.r[k]) * model.x[i] * model.x[j] * model.x[k] for i in
          model.I for j in model.I for k in model.I if ((not i == j) & (not j == k) & (not k == i))))
+    print("Step v3 num in %.3f secs"% (time.time() - start_time))
+    start_time = time.time()
     # print("Step3 NUM:",objective_expr_num)
     objective_expr_den = model.v0
     objective_expr_den += sum((model.v1[i] * model.x[i] for i in model.I))
+    print("Step v1 den in %.3f secs"% (time.time() - start_time))
+    start_time = time.time()
     # print("Step1 Den:",objective_expr_den)
     objective_expr_den += 0.5 * sum(
         (model.v2[i, j] * model.x[i] * model.x[j] for i in model.I for j in model.I if (not (i == j))))
+    print("Step v2 den in %.3f secs"% (time.time() - start_time))
+    start_time = time.time()
     # print("Step2 Den:",objective_expr_den)
     objective_expr_den += (1 / 6) * sum(
         (model.v3[i, j, k] * model.x[i] * model.x[j] * model.x[k] for i in model.I for j in model.I for k in model.I if
          ((not i == j) & (not j == k) & (not k == i))))
+    print("Step v3 den in %.3f secs"% (time.time() - start_time))
     # print("Step3 Den:",objective_expr_den)
     return objective_expr_num / objective_expr_den
 

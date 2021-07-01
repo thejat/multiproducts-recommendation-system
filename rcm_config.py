@@ -10,6 +10,8 @@ rcm_model_dir = f'results/rcm_optim/%s_experiments/rcm_models'
 rcm_solution_dir = 'results/rcm_optim/%s_experiments/rcm_solutions'
 rcm_summary_dir = 'results/rcm_optim/%s_experiments'
 
+
+
 experiment_set_dict = {
     'spc_test': {
         'price_range': [10000],

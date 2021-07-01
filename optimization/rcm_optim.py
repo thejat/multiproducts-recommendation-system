@@ -8,7 +8,7 @@ from itertools import chain
 # from sklearn.neighbors import LSHForest
 from sklearn.neighbors import NearestNeighbors
 from synthetic_models.utils import set_char_from_ast, ast_from_set_char, signal_handler
-import cplex
+# import cplex
 import docplex.mp.model as cpx
 from threading import Thread, Lock
 import pickle
@@ -24,8 +24,7 @@ import multiprocessing as mp
 import signal
 
 
-opt = SolverFactory('bonmin')
-
+opt = SolverFactory('/Users/ppatida2/Bonmin-1.8.8/build/bin/bonmin')
 logger = logging.getLogger(__name__)
 
 '''
@@ -1961,8 +1960,12 @@ def tcm_bonmin_mnlip(num_prods, C, rcm, meta=None):
     data_filepath = meta['data_filepath']
     # create an instance
     st = time.time()
-    instance = tcm_model.create_instance(data_filepath)
+    instance = tcm_model.create_instance(data_filepath, report_timing=True, profile_memory=3)
+    logger.info("TCM Bonmin instance created in %.3f secs", time.time()-st)
+    # opt.options['bonmin.time_limit'] = 5
+    start_time = time.time()
     results = opt.solve(instance, tee=True)
+    logger.info("TCM Bonmin Solve time: %.3f secs", time.time()-start_time)
     maxSet = []
     for i in instance.x:
         if instance.x[i].value == 1.:
@@ -1974,6 +1977,8 @@ def tcm_bonmin_mnlip(num_prods, C, rcm, meta=None):
 
 
 def bonmin_write_model_data_file(rcm, meta, k_val=None):
+    logger.info("Start writing model file for bonmin")
+    start_time = time.time()
     prices = rcm['p'][1:]  # removing p0
     n = len(rcm['v']) - 1
     # open file handle
@@ -1990,12 +1995,15 @@ def bonmin_write_model_data_file(rcm, meta, k_val=None):
         for i, price in enumerate(prices):
             f.write(f"{i + 1} {price}\n")
         f.write(";\n")
+        logger.info("Written basic params..")
 
         # write v1s
         f.write(f"param v1 :=\n")
         for i in range(n):
             f.write(f"{i + 1} {rcm['v'][i + 1]}\n")
         f.write(";\n")
+
+        logger.info("Written v1 params..")
 
         #write selected, removed products
         # if selected_products is not None:
@@ -2020,7 +2028,7 @@ def bonmin_write_model_data_file(rcm, meta, k_val=None):
                         f.write(f"{i + 1} {j + 1} {val}\n")
                         f.write(f"{j + 1} {i + 1} {val}\n")
             f.write(";\n")
-
+        logger.info("Written v2 params..")
         # write v3s
         if len(rcm['v3'].keys()) > 0:
             f.write(f"param v3 :=\n")
@@ -2037,7 +2045,9 @@ def bonmin_write_model_data_file(rcm, meta, k_val=None):
                             f.write(f"{k + 1} {j + 1} {i + 1} {val}\n")
                             f.write(f"{k + 1} {i + 1} {j + 1} {val}\n")
             f.write(";\n")
+        logger.info("Written v3 params..")
 
+    logger.info("Writing model file completes in %.3f secs",time.time()-start_time)
     return
 
 

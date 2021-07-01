@@ -6,10 +6,10 @@ import collections
 
 default_meta = {'eps': 1e-3, 'print_results': True, 'print_debug': True}
 basic_keys = ['price_range', 'num_prods', 'repeat_count', 'algorithm_list']
-rcm_model_dir = f'results/final_paper/rcm/models'
-rcm_solution_dir = 'results/final_paper/rcm/solutions'
-rcm_timelog_dir = 'results/final_paper/rcm/time_logs'
-rcm_summary_dir = 'results/final_paper/rcm'
+rcm_model_dir = f'results/jun2021_iteration/rcm/models'
+rcm_solution_dir = 'results/jun2021_iteration/rcm/solutions'
+rcm_timelog_dir = 'results/jun2021_iteration/rcm/time_logs'
+rcm_summary_dir = 'results/jun2021_iteration/rcm'
 RC = 50
 small_lb = 20
 small_ub = 100  # excludes ub
@@ -23,6 +23,18 @@ large_delta = 500
 small_array = list(range(small_lb, small_ub, small_delta))
 medium_array = list(range(medium_lb, medium_ub, medium_delta))
 large_array = list(range(large_lb, large_ub, large_delta))
+
+jun21_experiment_set_dict  =collections.OrderedDict({
+    'synthetic_model_test': {
+        'num_prods': list(range(50, 100, 50)),
+        'repeat_count': 1,
+        'prob_v0': None,
+        'max_assortment_size': 5,
+        'parent_model_file': 'synthetic_models/models/tafeng.pkl',
+        'test_only': True,
+        'algorithm_list': [NOISYBINSEARCHIMPROVED_QIP_MTHREAD]
+    },
+})
 
 experiment_set_dict = collections.OrderedDict({
     'small'                   : {
